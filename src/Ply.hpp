@@ -345,8 +345,11 @@ class Ply {
             /* XXX: This will not work with Mac-style '\r' EOL */
             while (getline(_stream, line_str)) {
                 /* The first line must be "ply" */
+		    line_str.erase(std::remove_if(line_str.begin(), line_str.end(), [](char c){return c=='\r';}),line_str.end());
                 if (line_num == 0) {
+			
                     if (line_str != "ply") {
+
                         std::cerr << "Ply: invalid first line in header"
                                   << std::endl;
                         _stream.close();

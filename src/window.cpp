@@ -22,6 +22,10 @@ maxNumRecentFiles(15), recentFileActs(15)
     
 	// Handling actions
 	connect(actionQuit, SIGNAL(triggered()), this, SLOT(close()));
+
+	//TODO
+	//XXX
+	on_actionOpen_PLY_triggered();
 }
 
 MainWindow::~MainWindow()
@@ -45,7 +49,8 @@ void MainWindow::closeEvent(QCloseEvent *event)
 void MainWindow::on_actionOpen_PLY_triggered()
 {
     // XXX: path
-    m_scene->loadPLY("");
+    m_scene->loadPLY("../data/laser/maison_Mougins/Mougins_0.ply");
+    m_scene->compute_delaunay();
 }
 
 

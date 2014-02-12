@@ -5,8 +5,60 @@ Scene::Scene()
 {
 }
 
-void Scene::loadPLY(const std::string& path)
+using I::misc::Ply;
+
+//void loadPLYcertis(const std::string& );
+bool Scene::loadPLY(const std::string& path)
 {
+	vpoint.clear();
+	std::vector< Point_d > points_temp;
+	Ply ply;
+	if (!ply.open(path)){ return false;}
+	for (Ply::ElementsIterator it = ply.elements_begin(); it != ply.elements_end(); ++it)
+	{
+		const Ply::Element& element = *it;
+		if (element.name() != "vertex")
+		{
+			if (!ply.skip(element)){ ply.close(); return false;}
+			continue;
+		}
+		size_t num_vertices = element.count();
+		points_temp.resize(num_vertices);
+		if (element.num_properties()>6)
+		{
+			for (size_t i=0; i<num_vertices; i++)
+			{
+				double x,y,z;
+				if ((!ply.read(element.property(0), x))||(!ply.read(element.property(1), y))||(!ply.read(element.property(2), z))){cerr << "error while reading (pos) vertex " << i+1 << endl; ply.close(); return false;}		
+				for(int k=3;k<element.num_properties();k++){double tempp; if(!ply.read(element.property(k), tempp)){cerr << "error while reading attribut " << i+1 << endl; ply.close(); return false; }}
+					points_temp[i] = Point_d(x,y,z);
+			}
+		}
+
+		else
+		{
+			cerr << "Unexpected vertex properties in the PLY file" << endl;
+			ply.close();
+			return false;
+		}
+	}
+	vpoint.reserve(points_temp.size());
+	for(int i=0;i<points_temp.size();i++)
+	{
+		vpoint.push_back(points_temp[i]);
+//		if(is_normal_given) normal.push_back(normals_temp[i]);
+	}
+//		if(label_plane.size()>0) IS_PC_CLUSTERED=true;
+//		else IS_PC_CLUSTERED=false;
+
+	points_temp.clear();
+	ply.close();
+	return true;
+}
+//void Scene::loadPLYcertis(const std::string& path)
+//{
+//	sl.load_points_Certis(path);
+//}
    // Ply ply;
 
    // // Read PLY header
@@ -49,4 +101,3 @@ void Scene::loadPLY(const std::string& path)
    // }
 
    // ply.close();
-}
