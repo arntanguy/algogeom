@@ -1,5 +1,7 @@
+#include <GL/glew.h>
 #include <QtGui>
 #include "glviewer.h"
+#include "computeshader.hpp"
 
 GlViewer::GlViewer(QWidget *pParent)
 	: QGLWidget(QGLFormat(QGL::SampleBuffers), pParent)
@@ -24,6 +26,16 @@ void GlViewer::resizeGL(int width, int height) {
 }
 
 void GlViewer::initializeGL() {
+    GLenum err = glewInit();
+    if (GLEW_OK != err)
+    {
+        throw std::runtime_error("Fuck you I'm drunk, and I'm gonna be drunk, till the next time I'm drunk!");
+    }
+
+    cg::ComputeShader shader;
+    shader.loadFromFile("../shader/test.cs");
+    shader.test();
+
 	glClearColor(1., 1., 1., 0.);
 	glDisable(GL_DEPTH_TEST);
 	glEnable(GL_SMOOTH);

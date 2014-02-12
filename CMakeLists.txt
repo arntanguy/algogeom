@@ -4,11 +4,10 @@ project (${PROJECT_NAME})
 cmake_minimum_required(VERSION 2.8)
 
 set(SRC src)
-set(INCLUDES src)
+set(LIB_DIR .)
+set(INCLUDES src "lib/cgengine/src")
 
 set( CMAKE_ALLOW_LOOSE_LOOP_CONSTRUCTS true )
-set(CMAKE_CXX_FLAGS "-std=c++11")
-
 
 if( COMMAND cmake_policy )
   cmake_policy( SET CMP0003 NEW )
@@ -23,6 +22,9 @@ find_package(CGAL COMPONENTS)
 find_package(Qt4)
 find_package(GLUT)
 find_package(OpenGL)
+find_package(GLEW)
+
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
 set( SRCS 
 ${SRC}/glviewer.cpp 
@@ -57,6 +59,7 @@ if( CGAL_FOUND AND QT4_FOUND AND OPENGL_FOUND )
     #qt4_generate_moc( glviewer.h moc_glviewer.cxx )
 
     include_directories(${INCLUDES})
+    link_directories("/home/arnaud/polytech/AlgoGeom/mini-projet/lib/cgengine/lib")
 
     # The executable itself.
     add_executable( ${PROJECT_NAME} ${SRCS} ${MOCS} ${DT_UI_FILES} ${DT_RESOURCE_FILES} )
@@ -65,10 +68,14 @@ if( CGAL_FOUND AND QT4_FOUND AND OPENGL_FOUND )
     target_link_libraries( ${PROJECT_NAME} ${QT_LIBRARIES} )
 
     # Link with Glut and OpenGL
-    target_link_libraries( ${PROJECT_NAME} ${OPENGL_LIBRARY} ${GLUT_LIBRARY}  )
+    target_link_libraries( ${PROJECT_NAME} ${OPENGL_LIBRARY} ${GLUT_LIBRARY}  ${GLEW_LIBRARY} )
 
     # Link with CGAL
     target_link_libraries( ${PROJECT_NAME} ${CGAL_LIBRARIES} ${CGAL_3RD_PARTY_LIBRARIES})
+
+    # XXX
+    target_link_libraries( ${PROJECT_NAME} CGEngine )
+
 
 else()
   message(STATUS "NOTICE: This program requires CGAL and Qt4, and will not be compiled.")

@@ -7,9 +7,6 @@
 #include <list>
 #include <string>
 
-// Qt
-#include <QtOpenGL>
-
 class Scene
 {
 public:
@@ -18,9 +15,7 @@ public:
 private:
 
 public:
-	Scene()
-	{
-	}
+	Scene();
 
 	~Scene()
 	{

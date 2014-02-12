@@ -1,6 +1,10 @@
 #include "scene.h"
 #include "Ply.hpp"
 
+Scene::Scene() 
+{
+}
+
 void Scene::loadPLY(const std::string& path)
 {
    // Ply ply;
