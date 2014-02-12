@@ -105,8 +105,7 @@ void GlViewer::sample_mouse_path(const QPoint& point)
 	double x, y;
 	convert_to_world_space(point, x, y);
 
-	m_scene->add_point(Scene::Point(x, y));
-	m_scene->set_mouse_pos(Scene::Point(x, y));
+	//m_scene->set_mouse_pos(Scene::Point(x, y));
 }
 
 void GlViewer::move_camera(const QPoint& p0, const QPoint& p1)
