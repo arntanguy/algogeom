@@ -37,7 +37,7 @@ protected:
 public slots:
 
 	    // Data
-		void on_actionClear_triggered();
+		void on_actionOpen_PLY_triggered();
 };
 
 #endif // _WINDOW_

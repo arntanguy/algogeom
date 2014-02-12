@@ -27,7 +27,9 @@ find_package(OpenGL)
 set( SRCS 
 ${SRC}/glviewer.cpp 
 ${SRC}/main.cpp 
-${SRC}/window.cpp)
+${SRC}/window.cpp
+${SRC}/scene.cpp
+) 
 
 set(SRC_MOC ${SRC}/window.h ${SRC}/glviewer.h)
 

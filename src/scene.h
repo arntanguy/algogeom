@@ -5,6 +5,7 @@
 #include <fstream>
 #include <algorithm>
 #include <list>
+#include <string>
 
 // Qt
 #include <QtOpenGL>
@@ -33,6 +34,7 @@ public:
 	{
 	}
 
+    void loadPLY(const std::string& );
 };
 
 #endif // _SCENE_H_

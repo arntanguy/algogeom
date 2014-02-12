@@ -32,14 +32,14 @@
      <x>0</x>
      <y>0</y>
      <width>798</width>
-     <height>21</height>
+     <height>19</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuData">
     <property name="title">
      <string>Data</string>
     </property>
-    <addaction name="actionClear"/>
+    <addaction name="actionOpen_PLY"/>
    </widget>
    <addaction name="menuData"/>
   </widget>
@@ -64,6 +64,11 @@
    </property>
    <property name="shortcut">
     <string>Space</string>
+   </property>
+  </action>
+  <action name="actionOpen_PLY">
+   <property name="text">
+    <string>Open PLY</string>
    </property>
   </action>
  </widget>

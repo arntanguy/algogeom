@@ -42,10 +42,10 @@ void MainWindow::closeEvent(QCloseEvent *event)
 
 
 
-void MainWindow::on_actionClear_triggered()
+void MainWindow::on_actionOpen_PLY_triggered()
 {
-	m_scene->clear();
-	update();
+    // XXX: path
+    m_scene->loadPLY("");
 }
 
 
