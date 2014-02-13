@@ -31,6 +31,7 @@ ${SRC}/glviewer.cpp
 ${SRC}/main.cpp 
 ${SRC}/window.cpp
 ${SRC}/scene.cpp
+${SRC}/qttexture.cpp
 ) 
 
 set(SRC_MOC ${SRC}/window.h ${SRC}/glviewer.h)

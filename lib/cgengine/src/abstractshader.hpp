@@ -48,6 +48,8 @@ class AbstractShader
         virtual void enable();
         static void disable();
 
+        int getVariableId(const std::string& strVariable) const;
+
 
         //virtual void setUniform(const std::string &uniformVarName, float value);
         //virtual void setUniform(const std::string &uniformVarName, int value);

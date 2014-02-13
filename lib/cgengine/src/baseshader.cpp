@@ -329,31 +329,6 @@ void BaseShader::bindTextures()
 
 
 /**
- * @brief Returns the uniform ID of a shader's variable
- *
- * @param strVariable
- *      Name of the variable
- * @return
- *      Uniform ID of variable
- */
-int BaseShader::getVariableId(const std::string& strVariable) const
-{
-    // If we don't have an active program object, let's return -1
-    if (!mProgramHandle)
-        return -1;
-
-    int uniformId = glGetUniformLocation(mProgramHandle, strVariable.c_str());
-    if (uniformId == -1)
-        cerr << "Uniform \"" << strVariable << "\" not found in shader " << mShaderName << std::endl;
-
-    //cout << "getVariableId("<<strVariable<<") = " << uniformId << endl;
-    // This returns the variable ID for a variable that is used to find
-    // the address of that variable in memory.
-    return uniformId;
-}
-
-
-/**
  * @brief Sets an uniform GLSL float value
  * WARNING: This has to be called after the shader has been enabled (by calling the enable() function)!
  *

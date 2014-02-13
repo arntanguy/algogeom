@@ -5,6 +5,8 @@
 #include <stdexcept>
 #include <iostream>
 
+using namespace std;
+
 namespace cg
 {
 
@@ -140,6 +142,32 @@ void AbstractShader::enable()
 void AbstractShader::disable()
 {
     glUseProgram(0);
+}
+
+
+
+/**
+ * @brief Returns the uniform ID of a shader's variable
+ *
+ * @param strVariable
+ *      Name of the variable
+ * @return
+ *      Uniform ID of variable
+ */
+int AbstractShader::getVariableId(const std::string& strVariable) const
+{
+    // If we don't have an active program object, let's return -1
+    if (!mProgramHandle)
+        return -1;
+
+    int uniformId = glGetUniformLocation(mProgramHandle, strVariable.c_str());
+    if (uniformId == -1)
+        cerr << "Uniform \"" << strVariable << "\" not found in shader " << mShaderName << std::endl;
+
+    //cout << "getVariableId("<<strVariable<<") = " << uniformId << endl;
+    // This returns the variable ID for a variable that is used to find
+    // the address of that variable in memory.
+    return uniformId;
 }
 
 }

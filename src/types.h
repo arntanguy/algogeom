@@ -126,6 +126,3 @@ typedef Kernelsc::Line_3 Line_Flo;
 #include <CGAL/Surface_mesh_simplification/Detail/Common.h>
 #include <CGAL/Surface_mesh_simplification/Policies/Edge_collapse/Edge_profile.h>
 #include <CGAL/Unique_hash_map.h>
-
-
-using namespace std;

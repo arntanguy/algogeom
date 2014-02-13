@@ -1,6 +1,7 @@
 #ifndef GLWIDGET_H
 #define GLWIDGET_H
 
+#include "shader.hpp"
 #include <QGLWidget>
 #include <QPaintEvent>
 #include "scene.h"
@@ -18,6 +19,9 @@ private:
     
     // mouse
     QPoint m_mouse_click, m_mouse_move;
+
+    GLuint vao;
+    cg::Shader * fullscreenShader;
     
 public:
     GlViewer(QWidget *parent);

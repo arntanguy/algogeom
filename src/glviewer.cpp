@@ -2,6 +2,8 @@
 #include <QtGui>
 #include "glviewer.h"
 #include "computeshader.hpp"
+#include "qttexture.hpp"
+#include <QImage>
 
 GlViewer::GlViewer(QWidget *pParent)
 	: QGLWidget(QGLFormat(QGL::SampleBuffers), pParent)
@@ -14,42 +16,59 @@ GlViewer::GlViewer(QWidget *pParent)
 }
 
 void GlViewer::resizeGL(int width, int height) {
+    qDebug() << "resizeGL " << width << " " << height;
+	//glViewport(0, 0, width, height);
 	glViewport(0, 0, width, height);
 	double aspect_ratio = double(height) / double(width);
+    
+	//glMatrixMode(GL_PROJECTION);
+	//glLoadIdentity();
+	//glOrtho(-1.0, 1.0, -aspect_ratio, aspect_ratio, -1.0, 1.0);
 
-	glMatrixMode(GL_PROJECTION);
-	glLoadIdentity();
-	glOrtho(-1.0, 1.0, -aspect_ratio, aspect_ratio, -1.0, 1.0);
-
-	glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity();
+	//glMatrixMode(GL_MODELVIEW);
+	//glLoadIdentity();
 }
 
 void GlViewer::initializeGL() {
+	glClearColor(1., 1., 1., 0.);
+
     GLenum err = glewInit();
     if (GLEW_OK != err)
     {
         throw std::runtime_error("Fuck you I'm drunk, and I'm gonna be drunk, till the next time I'm drunk!");
     }
 
+
     cg::ComputeShader shader;
-    shader.loadFromFile("../shader/test.cs");
+    shader.loadFromFile("../shader/test_image.cs");
     shader.test();
 
-	glClearColor(1., 1., 1., 0.);
-	glDisable(GL_DEPTH_TEST);
-	glEnable(GL_SMOOTH);
+    glGenVertexArrays(1, &vao);
+
+    cg::QtTexture *tex = new cg::QtTexture();
+    tex->load(GlViewer::convertToGLFormat(QImage("lena.bmp")));
+
+    glUseProgram(0);
+
+    fullscreenShader = new cg::Shader();
+    fullscreenShader->loadVertexShaderFromFile("../shader/empty.vert");
+    fullscreenShader->loadGeometryShaderFromFile("../shader/fullscreen_quad.geom");
+    fullscreenShader->loadFragmentShaderFromFile("../shader/fullscreen_quad.frag");
+    fullscreenShader->enable();
+    fullscreenShader->setTexture("Texture", shader.texHandle);
+    //fullscreenShader->setTexture("Texture", tex->getTextureId());
+
 }
 
 void GlViewer::paintGL() {
 	glClear(GL_COLOR_BUFFER_BIT);
 	if (!m_scene) return;
 
-	glPushMatrix();
-	glScaled(m_scale, m_scale, m_scale);
-	glTranslated(-m_center_x, -m_center_y, 0.0);
-	m_scene->render();
-	glPopMatrix();
+    fullscreenShader->enable();
+    //fullscreenShader.setTexture("Texture", shader.texHandle);
+    glBindVertexArray( vao );
+    glDrawArrays( GL_POINTS, 0, 1 );
+    glBindVertexArray(0);
 }
 
 void GlViewer::wheelEvent(QWheelEvent *event) {

@@ -33,8 +33,6 @@ protected:
 
     void init();
 
-    int getVariableId(const std::string& strVariable) const;
-
 
 public:
     BaseShader();
