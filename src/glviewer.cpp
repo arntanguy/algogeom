@@ -30,7 +30,7 @@ void GlViewer::resizeGL(int width, int height) {
 }
 
 void GlViewer::initializeGL() {
-	glClearColor(1., 1., 1., 0.);
+    glClearColor(1., 1., 1., 0.);
 
     GLenum err = glewInit();
     if (GLEW_OK != err)
@@ -41,22 +41,31 @@ void GlViewer::initializeGL() {
 
     cg::ComputeShader shader;
     shader.loadFromFile("../shader/test_image.cs");
-    shader.test();
+    //shader.createBuffer<float>({0., 1., 2., 3., 4., 5., 6., 7., 8., 9.});
+    //shader.bindBuffer();
+    // GLfloat *test = new GLfloat[10];
+    // shader.getBuffer(test);  
+    //std::cout << "Result: " << std::endl;
+    //for(int i=0; i<10; i++) {
+    //    cout << test_res[i] << ", ";
+    //}
+    //glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
+    //glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+
+    shader.enable();
+    GLuint tex_id = shader.genTexture();
+    shader.bindImageTexture("destTex", tex_id); 
+    glDispatchCompute( 512/16, 512/16, 1 ); // 512^2 threads in blocks of 16 
+    //glMemoryBarrier( GL_SHADER_STORAGE_BARRIER_BIT );
 
     glGenVertexArrays(1, &vao);
-
-    cg::QtTexture *tex = new cg::QtTexture();
-    tex->load(GlViewer::convertToGLFormat(QImage("lena.bmp")));
-
-    glUseProgram(0);
 
     fullscreenShader = new cg::Shader();
     fullscreenShader->loadVertexShaderFromFile("../shader/empty.vert");
     fullscreenShader->loadGeometryShaderFromFile("../shader/fullscreen_quad.geom");
     fullscreenShader->loadFragmentShaderFromFile("../shader/fullscreen_quad.frag");
     fullscreenShader->enable();
-    fullscreenShader->setTexture("Texture", shader.texHandle);
-    //fullscreenShader->setTexture("Texture", tex->getTextureId());
+    fullscreenShader->setTexture("Texture", tex_id);
 
 }
 
@@ -65,7 +74,6 @@ void GlViewer::paintGL() {
 	if (!m_scene) return;
 
     fullscreenShader->enable();
-    //fullscreenShader.setTexture("Texture", shader.texHandle);
     glBindVertexArray( vao );
     glDrawArrays( GL_POINTS, 0, 1 );
     glBindVertexArray(0);

@@ -17,7 +17,7 @@ layout(rgba32f) uniform image2D destTex;
 // gl_WorkGroupID is the work group's index
 void main(void)
 {
-    //val[gl_WorkGroupID.x] = pow(val[gl_WorkGroupID.x],2);
+    val[0] = pow(val[gl_WorkGroupID.x],2);
         ivec2 storePos = ivec2(gl_GlobalInvocationID.xy);
         float localCoef = length(vec2(ivec2(gl_LocalInvocationID.xy)-8)/8.0);
         float globalCoef = sin(float(gl_WorkGroupID.x+gl_WorkGroupID.y)*0.1 + roll)*0.5;

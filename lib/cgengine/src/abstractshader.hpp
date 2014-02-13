@@ -45,9 +45,6 @@ class AbstractShader
             enable();
         }
 
-        virtual void enable();
-        static void disable();
-
         int getVariableId(const std::string& strVariable) const;
 
 
@@ -57,6 +54,10 @@ class AbstractShader
     public:
         AbstractShader();
         virtual ~AbstractShader();
+
+        virtual void enable();
+        static void disable();
+
 };
 }
 
