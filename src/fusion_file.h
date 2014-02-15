@@ -57,6 +57,7 @@ void fusion_file_ply(const char* file_scan_center, const char* output, const uns
 		else
 			ofs << tmp << std::endl;
 	}while(tmp!="end_header");
+	ifs.close();
 	for (int i=0; i<n; ++i)
 	{
 		oss.str("");
@@ -66,7 +67,7 @@ void fusion_file_ply(const char* file_scan_center, const char* output, const uns
 		const int& end = nb_vertex_[i];
 		for(int j=0; j<end;++j)
 		{
-			for(int k=0; k<=point_to_ignore;k++)
+			for(int k=0; k<=point_to_ignore;++k)
 				std::getline(ifs,tmp);
 			if(*tmp.crbegin() == '\r')
 				tmp.erase(tmp.end()-1);
