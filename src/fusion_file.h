@@ -7,6 +7,9 @@
 #include<vector>
 #include<list>
 #include<iostream>
+
+
+//TODO the number of vertex is not update -> read how change a number in a file without copy all fie
 void fusion_file_ply(const char* file_scan_center, const char* output, unsigned int point_to_ignore)
 {
 	std::ifstream ifs;
