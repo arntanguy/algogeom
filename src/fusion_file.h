@@ -9,8 +9,7 @@
 #include<iostream>
 
 
-//TODO the number of vertex is not update -> read how change a number in a file without copy all fie
-void fusion_file_ply(const char* file_scan_center, const char* output, unsigned int point_to_ignore)
+void fusion_file_ply(const char* file_scan_center, const char* output, const unsigned int point_to_ignore)
 {
 	std::ifstream ifs;
 	std::ofstream ofs;
@@ -21,42 +20,56 @@ void fusion_file_ply(const char* file_scan_center, const char* output, unsigned 
 	std::string str = file_scan_center;
 	str.erase(str.begin()+str.find("scan_centers.txt"),str.end());
 	std::ostringstream oss;
+	std::string tmp;
+	int read_line;
+	ifs.close();
+	std::vector<int> nb_vertex_(n);
+	size_t nb_vertex(0);
+	size_t nb_vertex_tmp;
+	for (int i=0; i<n; ++i)
+	{
+		oss.str("");
+		oss << str << i << ".ply";
+		ifs.open(oss.str());
+		do
+		{
+			std::getline(ifs,tmp);
+		}while(tmp.find("element vertex") != 0);
+		tmp.erase(tmp.begin(), tmp.begin()+15);
+		std::istringstream(tmp)>>nb_vertex_tmp;
+		nb_vertex_tmp/=(point_to_ignore+1);
+		nb_vertex+=nb_vertex_tmp;
+		nb_vertex_[i]=nb_vertex_tmp;
+		ifs.close();
+	}
 	oss.str("");
 	oss << str << "0.ply";
 	ifs.open(oss.str());
-	std::string tmp;
 	ofs.open(output);
-	int read_line;
 	do
 	{
 		std::getline(ifs,tmp);
 		if(*tmp.crbegin() == '\r')
 			tmp.erase(tmp.end()-1);
 			//tmp.erase(tmp.rbegin());
-		ofs << tmp << std::endl;
+		if(tmp.find("element vertex") == 0)
+			ofs << "element vertex " << nb_vertex << std::endl;
+		else
+			ofs << tmp << std::endl;
 	}while(tmp!="end_header");
-	ifs.close();
 	for (int i=0; i<n; ++i)
 	{
-		read_line = 0;
 		oss.str("");
 		oss << str << i << ".ply";
 		std::cout << oss.str() << std::endl;
 		ifs.open(oss.str());
-		do
+		const int& end = nb_vertex_[i];
+		for(int j=0; j<end;++j)
 		{
-			std::getline(ifs,tmp);
-		if(*tmp.crbegin() == '\r')
-			tmp.erase(tmp.end()-1);
-		}while(tmp!="end_header");
-		while(std::getline(ifs,tmp).good())
-		{
+			for(int k=0; k<=point_to_ignore;k++)
+				std::getline(ifs,tmp);
 			if(*tmp.crbegin() == '\r')
 				tmp.erase(tmp.end()-1);
-			if(point_to_ignore>=++read_line)
-				continue;
-		//	std::cout << read_line<<std::endl;
-			read_line = 0;
 			ofs << tmp << std::endl;
 		}
 		ifs.close();
