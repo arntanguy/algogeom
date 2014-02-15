@@ -19,7 +19,7 @@ set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../../CMakeModules)
 
 set(SRC src)
 set(BIN_DIR .)
-set(LIB_DIR lib)
+set(LIB_DIR .)
 set(LIB_TYPE SHARED)
 #set(LIB_TYPE STATIC)
 set(DOC_DIR doc)
@@ -35,7 +35,6 @@ set(SYSTEM_LIBS
 )
 
 set(EXTRA_LIBS
-    "${LIB_DIR}/cgengine/lib/libCGEngine.so"
 )
 
 set(SYSTEM_INCLUDES
@@ -51,7 +50,9 @@ set( EXTRA_INCLUDES
 #     ${SRC}/*.cpp
 #)
 set(SOURCES
+${SRC}/abstractshader.cpp
 ${SRC}/baseshader.cpp
+${SRC}/computeshader.cpp
 ${SRC}/basetexture.cpp
 ${SRC}/shader.cpp
 ${SRC}/vao.cpp

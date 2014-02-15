@@ -9,37 +9,29 @@
 #include <GL/gl.h>
 #include "vao.hpp"
 #include "vbo.hpp"
+#include "abstractshader.hpp"
 
 namespace cg
 {
 class BaseTexture;
 
-class BaseShader
+class BaseShader : public AbstractShader
 {
 protected:
-    std::string mShaderName;
-    GLenum shader_type;
     GLhandleARB mVertexHandle;
     GLhandleARB mFragmentHandle;
     GLhandleARB mGeometryHandle;
-    GLhandleARB mProgramHandle;
 
     VAO mVAO;
     // uniform ID, texture_id
     std::map<GLuint, std::shared_ptr<BaseTexture>> m_textures;
     void bindTextures();
 
-    std::string loadFile(const std::string &str);
     GLhandleARB createSharedObjects(const std::string shader,
                                     GLenum shaderType);
     void linkShader();
 
     void init();
-
-    int getVariableId(const std::string& strVariable) const;
-
-
-    void printLog(GLuint object);
 
 
 public:
@@ -60,37 +52,14 @@ public:
     void loadGeometryShaderFromFile(const std::string &shader);
     void loadGeometryShader(const std::string &shader);
 
-    void setName(const std::string& name)
-    {
-        mShaderName = name;
-    }
-    std::string getName() const
-    {
-        return mShaderName;
-    }
-
-    void enable();
-    static void disable();
-
     void setTexture(const std::string &uniformLocation, GLuint texture);
     void setTexture(const std::string &uniformLocation, const std::shared_ptr<BaseTexture>& texture);
     void clear_texture();
 
     bool hasShaderSupport();
 
-    GLhandleARB getProgramHandle() const;
-
-
-    operator GLuint()
-    {
-        return mProgramHandle;
-    }
-    void operator()()
-    {
-        enable();
-    }
-
-
+    void enable();
+    static void disable();
 
     virtual void setUniform(const std::string &uniformVarName, float value);
     virtual void setUniform(const std::string &uniformVarName, int value);

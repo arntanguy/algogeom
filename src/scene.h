@@ -1,5 +1,7 @@
 #ifndef _SCENE_H_
 #define _SCENE_H_
+#include<GL/glew.h>
+
 
 // std
 #include <fstream>
@@ -9,7 +11,7 @@
 #include<vector>
 #include<algorithm>
 // Qt
-#include <QtOpenGL>
+//#include <QtOpenGL>
 
 
 //CGAL
@@ -44,14 +46,8 @@ public:
 private:
 
 public:
-	Scene()
-	{
-	}
-
-	~Scene()
-	{
-	}
-
+	Scene();
+	~Scene();
 	void clear()
 	{
 	}
@@ -124,3 +120,5 @@ public:
 };
 
 #endif // _SCENE_H_
+
+

@@ -16,6 +16,6 @@
 *.swo
 
 
-data/**
-build/**
+data/
+build/
 lib/cgengine/lib

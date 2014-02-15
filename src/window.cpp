@@ -49,8 +49,8 @@ void MainWindow::closeEvent(QCloseEvent *event)
 void MainWindow::on_actionOpen_PLY_triggered()
 {
     // XXX: path
-    m_scene->loadPLY("../data/laser/maison_Mougins/Mougins_0.ply");
-    m_scene->compute_delaunay();
+    //m_scene->loadPLY("../data/laser/maison_Mougins/Mougins_0.ply");
+    //m_scene->compute_delaunay();
 }
 
 

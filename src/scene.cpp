@@ -1,7 +1,12 @@
 #include "scene.h"
 #include "Ply.hpp"
 
+using namespace std;
 using I::misc::Ply;
+
+Scene::Scene() 
+{
+}
 
 //void loadPLYcertis(const std::string& );
 bool Scene::loadPLY(const std::string& path)
