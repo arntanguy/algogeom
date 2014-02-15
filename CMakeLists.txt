@@ -46,6 +46,7 @@ ${SRC}/scene.cpp
 ${SRC}/qttexture.cpp
 ) 
 
+set( SRC_FUSION ${SRC}/main_fusion.cpp)
 set(SRC_MOC ${SRC}/window.h ${SRC}/glviewer.h)
 
 if(WIN32)
@@ -74,7 +75,7 @@ if( CGAL_FOUND AND QT4_FOUND AND OPENGL_FOUND )
 
     # The executable itself.
     add_executable( ${PROJECT_NAME} ${SRCS} ${QT_MOCS} ${QT_UI_FILES} ${QT_RESOURCE_FILES} )
-
+	add_executable(fusion_file ${SRC_FUSION})
     # Link with Qt libraries
     target_link_libraries( ${PROJECT_NAME} ${QT_LIBRARIES} )
 
