@@ -21,8 +21,6 @@ void fusion_file_ply(const char* file_scan_center, const char* output, const uns
 	str.erase(str.begin()+str.find("scan_centers.txt"),str.end());
 	std::ostringstream oss;
 	std::string tmp;
-	int read_line;
-	ifs.close();
 	std::vector<int> nb_vertex_(n);
 	size_t nb_vertex(0);
 	size_t nb_vertex_tmp;
@@ -64,6 +62,12 @@ void fusion_file_ply(const char* file_scan_center, const char* output, const uns
 		oss << str << i << ".ply";
 		std::cout << oss.str() << std::endl;
 		ifs.open(oss.str());
+		do
+		{
+			std::getline(ifs,tmp);
+			if(*tmp.crbegin() == '\r')
+				tmp.erase(tmp.end()-1);
+		}while(tmp!="end_header");
 		const int& end = nb_vertex_[i];
 		for(int j=0; j<end;++j)
 		{
