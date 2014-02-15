@@ -24,7 +24,19 @@ find_package(GLUT)
 find_package(OpenGL)
 find_package(GLEW)
 
+
+#message( STATUS "********CXXflags: " ${CMAKE_CXX_FLAGS} )
+include(${CGAL_USE_FILE})#change CXX flags
+#message( STATUS "********CXXflags: " ${CMAKE_CXX_FLAGS} )
+include(${QT_USE_FILE})#change compile flag
+#message( STATUS "********CXXflags: " ${CMAKE_CXX_FLAGS} )
+
+#add_definitions(-march=native -ffast-math)
+#add_definitions(-std=c++11)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native -ffast-math")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3")
+message( STATUS "CXXflags: " ${CMAKE_CXX_FLAGS} )
 
 set( SRCS 
 ${SRC}/glviewer.cpp 
@@ -34,6 +46,7 @@ ${SRC}/scene.cpp
 ${SRC}/qttexture.cpp
 ) 
 
+set( SRC_FUSION ${SRC}/main_fusion.cpp)
 set(SRC_MOC ${SRC}/window.h ${SRC}/glviewer.h)
 
 if(WIN32)
@@ -43,28 +56,26 @@ endif(WIN32)
 
 
 if( CGAL_FOUND AND QT4_FOUND AND OPENGL_FOUND )
-    include(${CGAL_USE_FILE})
-    include(${QT_USE_FILE})
 
     # UI files (Qt Designer files)
-    qt4_wrap_ui( DT_UI_FILES ${SRC}/convex.ui)
+    qt4_wrap_ui( QT_UI_FILES ${SRC}/convex.ui)
 
     # qrc files (resources files, that contain icons, at least)
-    #qt4_add_resources( DT_RESOURCE_FILES ${PROJECT_NAME}.qrc )
+    #qt4_add_resources( T_RESOURCE_FILES ${PROJECT_NAME}.qrc )
 
     # use the Qt MOC preprocessor on classes that derives from QObject
-    qt4_wrap_cpp(MOCS ${SRC_MOC} OPTIONS -DBOOST_TT_HAS_OPERATOR_HPP_INCLUDED OPTIONS)
+    qt4_wrap_cpp(QT_MOCS ${SRC_MOC} OPTIONS -DBOOST_TT_HAS_OPERATOR_HPP_INCLUDED OPTIONS)
 
     # use the Qt MOC preprocessor on classes that derives from QObject
     #qt4_generate_moc( window.h moc_window.cxx )
     #qt4_generate_moc( glviewer.h moc_glviewer.cxx )
 
     include_directories(${INCLUDES})
-    link_directories("/home/arnaud/polytech/AlgoGeom/mini-projet/lib/cgengine/lib")
+    link_directories("${CMAKE_CURRENT_LIST_DIR}/lib/cgengine/lib")
 
     # The executable itself.
-    add_executable( ${PROJECT_NAME} ${SRCS} ${MOCS} ${DT_UI_FILES} ${DT_RESOURCE_FILES} )
-
+    add_executable( ${PROJECT_NAME} ${SRCS} ${QT_MOCS} ${QT_UI_FILES} ${QT_RESOURCE_FILES} )
+	add_executable(fusion_file ${SRC_FUSION})
     # Link with Qt libraries
     target_link_libraries( ${PROJECT_NAME} ${QT_LIBRARIES} )
 
