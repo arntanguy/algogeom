@@ -25,17 +25,28 @@ class ComputeShader : public AbstractShader
             createComputeShader(source);
         }
 
-        GLint getUniformBlockIndex(const std::string &name)
+        GLuint getUniformBlockIndex(const std::string &name)
         {
+            GLuint storage_block_index = glGetProgramResourceIndex( mProgramHandle, GL_SHADER_STORAGE_BLOCK, name.c_str()) ;
+            
+            //return storage_block_index;
             return glGetUniformBlockIndex(mProgramHandle, name.c_str());
         }
 
         template <typename T>
         GLuint createBuffer(const std::vector<T>& data)
         {
+            cout << "setting data to buffer: " << endl;
+            for(int i=0; i<10; i++)
+            {
+                cout << data[i] << ", " ;
+            }
+            cout << endl;
+
             GLuint buffer;
             glGenBuffers(1, &buffer);
             
+            cout << "creating buffer of size (" << sizeof(T) <<"x" << data.size() << ")" << endl;
             // Create buffer
             glBindBuffer( GL_SHADER_STORAGE_BUFFER, buffer );
             // Upload data 
@@ -47,22 +58,33 @@ class ComputeShader : public AbstractShader
         // Shader must be enabled!
         void bindBuffer(const std::string& uniformName, const GLuint& bufferId)
         {
-            // Upload
-            cout << uniformName << endl;
-            GLint id = getUniformBlockIndex(uniformName.c_str());
-            if(id != -1) 
-                glBindBufferBase( GL_SHADER_STORAGE_BUFFER, id, bufferId );
-            else
-                cerr << "Warning: uniform block not found in shader" << endl;
+            cout << "binding buffer " << bufferId << " to uniform " << uniformName << endl;
+
+
+            GLuint storage_block_index = glGetProgramResourceIndex( mProgramHandle, GL_SHADER_STORAGE_BLOCK, "MyBuffer") ;
+            cout << "storage_block_index: " << storage_block_index << endl;
+            glShaderStorageBlockBinding(mProgramHandle, storage_block_index, 2);
+            glBindBufferBase( GL_SHADER_STORAGE_BUFFER, 2, bufferId );
+
+            //if(storage_block_index != -1 && storage_block_index  != GL_INVALID_INDEX)  {
+            //    glBindBufferBase( GL_SHADER_STORAGE_BUFFER, storage_block_index, bufferId );
+            //}
+            //else
+            //    cerr << "Warning: uniform block not found in shader" << endl;
         }
 
-        template <typename T>
-        void getBuffer(T* buffer)
+        template<typename T>
+        T* getBuffer(GLuint bufferID)
         {
-            buffer = static_cast<T>(glMapBuffer( GL_SHADER_STORAGE_BUFFER, GL_READ_ONLY ));
+            cout << "getBuffer" << endl;
+            glBindBuffer(GL_SHADER_STORAGE_BUFFER, bufferID);
+            // Copy data
+            T *buffer = static_cast<T*>(glMapBufferRange( GL_SHADER_STORAGE_BUFFER, 0, sizeof(T)*10, GL_MAP_READ_BIT));
+            //glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
+            return buffer;
         }
 
-        GLuint genTexture() {
+        GLuint genTexture(const unsigned int& width, const unsigned int& height) {
         	// We create a single uint32 channel 512^2 texture
             GLuint texHandle;
         	glGenTextures(1, &texHandle);
@@ -70,12 +92,12 @@ class ComputeShader : public AbstractShader
         	glBindTexture(GL_TEXTURE_2D, texHandle);
         	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        	//glTexImage2D(GL_TEXTURE_2D, 0, GL_R32I, 512, 512, 0, GL_RED, GL_INT, NULL);
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 512, 512, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
             glBindTexture(GL_TEXTURE_2D, 0);
         
         	return texHandle;
         }
+
         void bindImageTexture(const std::string& uniformName, const GLuint& tex_id)
         {
             glBindTexture(GL_TEXTURE_2D, tex_id);

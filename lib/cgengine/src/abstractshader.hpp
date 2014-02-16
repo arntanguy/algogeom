@@ -31,11 +31,6 @@ class AbstractShader
             return mShaderName;
         }
 
-        GLuint getProgramHandle() const
-        {
-            return mProgramHandle;
-        }
-
         operator GLuint()
         {
             return mProgramHandle;
@@ -57,6 +52,11 @@ class AbstractShader
 
         virtual void enable();
         static void disable();
+
+        GLuint getProgramHandle() const
+        {
+            return mProgramHandle;
+        }
 
 };
 }
