@@ -44,6 +44,7 @@ ${SRC}/main.cpp
 ${SRC}/window.cpp
 ${SRC}/scene.cpp
 ${SRC}/qttexture.cpp
+${SRC}/Utils.cpp
 ) 
 
 set( SRC_FUSION ${SRC}/main_fusion.cpp)

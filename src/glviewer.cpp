@@ -5,6 +5,34 @@
 #include "qttexture.hpp"
 #include <QImage>
 
+#include <vector>
+#include <glm/glm.hpp>
+#include "Utils.h"
+
+using namespace std;
+
+void max_size()
+{
+    // Max values for dispatch = max number of work groups possible
+    int max_compute_workgroup_count[3];
+    glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 0, &max_compute_workgroup_count[0]);
+    glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 1, &max_compute_workgroup_count[1]);
+    glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 2, &max_compute_workgroup_count[2]);
+
+    int max_compute_workgroup_size[3];
+    glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_SIZE, 0, &max_compute_workgroup_size[0]);
+    glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_SIZE, 1, &max_compute_workgroup_size[1]);
+    glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_SIZE, 2, &max_compute_workgroup_size[2]);
+
+    int max_compute_workgroup_invocations;
+    glGetIntegerv(GL_MAX_COMPUTE_WORK_GROUP_INVOCATIONS, &max_compute_workgroup_invocations);
+
+
+    cout << "GL_MAX_COMPUTE_WORKGROUP_COUNT: (" << max_compute_workgroup_count[0] << ", " << max_compute_workgroup_count[1] << ", " << max_compute_workgroup_count[2] << ")" << endl;
+    cout << "GL_MAX_COMPUTE_WORKGROUP_SIZE: (" << max_compute_workgroup_size[0] << ", " << max_compute_workgroup_size[1] << ", " << max_compute_workgroup_size[2] << ")" << endl;
+    cout << "GL_MAX_COMPUTE_WORK_GROUP_INVOCATIONS: " << max_compute_workgroup_invocations << endl;
+}
+
 GlViewer::GlViewer(QWidget *pParent)
 	: QGLWidget(QGLFormat(QGL::SampleBuffers), pParent)
 {
@@ -16,7 +44,6 @@ GlViewer::GlViewer(QWidget *pParent)
 }
 
 void GlViewer::resizeGL(int width, int height) {
-    qDebug() << "resizeGL " << width << " " << height;
 	//glViewport(0, 0, width, height);
 	glViewport(0, 0, width, height);
 	double aspect_ratio = double(height) / double(width);
@@ -38,34 +65,61 @@ void GlViewer::initializeGL() {
         throw std::runtime_error("Fuck you I'm drunk, and I'm gonna be drunk, till the next time I'm drunk!");
     }
 
+    max_size();
+
+    std::vector<glm::vec3> normals(10000);
+    for(int i=0; i<10000; i++) {
+        normals[i] = glm::vec3(1., 0., 1.);
+    }
+
+    std::vector<GLfloat> test(10);
+    for(int i=0; i<10; i++) {
+        test[i] = i; 
+    }
 
     cg::ComputeShader shader;
-    shader.loadFromFile("../shader/test_image.cs");
-    //shader.createBuffer<float>({0., 1., 2., 3., 4., 5., 6., 7., 8., 9.});
-    //shader.bindBuffer();
-    // GLfloat *test = new GLfloat[10];
-    // shader.getBuffer(test);  
-    //std::cout << "Result: " << std::endl;
-    //for(int i=0; i<10; i++) {
-    //    cout << test_res[i] << ", ";
-    //}
-    //glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
-    //glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+    shader.loadFromFile("../shader/test.cs");
+    GLuint buffer = shader.createBuffer(test);
+    cout << "Buffer id: " << buffer << endl;
+    //GLuint tex_id_north = shader.genTexture(1024, 1024);
+    //GLuint tex_id_south = shader.genTexture(1024, 1024);
+    //cout << "Tex id: " << tex_id_north <<", " << tex_id_south << endl;
+    //shader.bindImageTexture("north_hemisphere", tex_id_north);
+    //shader.bindImageTexture("south_hemisphere", tex_id_south);
 
     shader.enable();
-    GLuint tex_id = shader.genTexture();
-    shader.bindImageTexture("destTex", tex_id); 
-    glDispatchCompute( 512/16, 512/16, 1 ); // 512^2 threads in blocks of 16 
-    //glMemoryBarrier( GL_SHADER_STORAGE_BARRIER_BIT );
+    shader.bindBuffer("MyBuffer", buffer);
+    glErr();
 
-    glGenVertexArrays(1, &vao);
+    // Create groups of 1024 normals for computation
+    // XXX: should ensure that group size is < GL_MAX_COMPUTE_WORK_GROUP_COUNT 
+    //glDispatchCompute( normals.size()/1024.f, 1, 1 ); 
+    //glDispatchCompute( 1024/16, 1024/16, 1);
+    glDispatchCompute(10, 1, 1);
 
-    fullscreenShader = new cg::Shader();
-    fullscreenShader->loadVertexShaderFromFile("../shader/empty.vert");
-    fullscreenShader->loadGeometryShaderFromFile("../shader/fullscreen_quad.geom");
-    fullscreenShader->loadFragmentShaderFromFile("../shader/fullscreen_quad.frag");
-    fullscreenShader->enable();
-    fullscreenShader->setTexture("Texture", tex_id);
+    GLfloat *test_res = shader.getBuffer<GLfloat>(buffer);  
+    glErr();
+    std::cout << "Result: " << std::endl;
+    for(int i=0; i<10; i++) {
+        cout << test_res[i] << ", ";
+    }
+
+    // Test fractal shader
+//    cg::ComputeShader fractal_shader;
+//    fractal_shader.loadFromFile("../shader/test_image.cs");
+//    fractal_shader.enable();
+//    GLuint tex_id = shader.genTexture(512, 512);
+//    fractal_shader.bindImageTexture("destTex", tex_id); 
+//    glDispatchCompute( 512/16, 512/16, 1 ); // 512^2 threads in blocks of 16 
+//
+//    glGenVertexArrays(1, &vao);
+//
+    //fullscreenShader = new cg::Shader();
+    //fullscreenShader->loadVertexShaderFromFile("../shader/empty.vert");
+    //fullscreenShader->loadGeometryShaderFromFile("../shader/fullscreen_quad.geom");
+    //fullscreenShader->loadFragmentShaderFromFile("../shader/fullscreen_quad.frag");
+    //fullscreenShader->enable();
+    //fullscreenShader->setTexture("Texture", tex_id);
 
 }
 
@@ -73,10 +127,10 @@ void GlViewer::paintGL() {
 	glClear(GL_COLOR_BUFFER_BIT);
 	if (!m_scene) return;
 
-    fullscreenShader->enable();
-    glBindVertexArray( vao );
-    glDrawArrays( GL_POINTS, 0, 1 );
-    glBindVertexArray(0);
+    //fullscreenShader->enable();
+    //glBindVertexArray( vao );
+    //glDrawArrays( GL_POINTS, 0, 1 );
+    //glBindVertexArray(0);
 }
 
 void GlViewer::wheelEvent(QWheelEvent *event) {
