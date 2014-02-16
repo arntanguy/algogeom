@@ -67,65 +67,65 @@ void GlViewer::initializeGL() {
 
     max_size();
 
-    std::vector<glm::vec3> normals(10);
-    for(int i=0; i<10; i++) {
+    std::vector<glm::vec3> normals(10000);
+    for(int i=0; i<10000; i++) {
         normals[i] = glm::vec3(1., 0., 1.);
     }
 
     cg::ComputeShader shader;
-    shader.loadFromFile("../shader/test.cs");
+    shader.loadFromFile("../shader/gen_sampler_sphere.cs");
     GLuint buffer = shader.createBuffer(normals);
     cout << "Buffer id: " << buffer << endl;
-    //GLuint tex_id_north = shader.genTexture(1024, 1024);
-    //GLuint tex_id_south = shader.genTexture(1024, 1024);
+    GLuint tex_id_north = shader.genTexture(1024, 1024);
+    GLuint tex_id_south = shader.genTexture(1024, 1024);
     //cout << "Tex id: " << tex_id_north <<", " << tex_id_south << endl;
-    //shader.bindImageTexture("north_hemisphere", tex_id_north);
-    //shader.bindImageTexture("south_hemisphere", tex_id_south);
-
     shader.enable();
+    shader.bindImageTexture("north_hemisphere", tex_id_north);
+    shader.bindImageTexture("south_hemisphere", tex_id_south);
+
     shader.bindBuffer("MyBuffer", buffer, 2);
     glErr();
 
+    glMemoryBarrier(GL_ALL_BARRIER_BITS);
     // Create groups of 1024 normals for computation
     // XXX: should ensure that group size is < GL_MAX_COMPUTE_WORK_GROUP_COUNT 
-    //glDispatchCompute( normals.size()/1024.f, 1, 1 ); 
-    //glDispatchCompute( 1024/16, 1024/16, 1);
-    glDispatchCompute(10, 1, 1);
+    glDispatchCompute( normals.size()/1024.f, 1, 1 ); 
+    glMemoryBarrier(GL_ALL_BARRIER_BITS);
 
     glm::vec3 *test_res = shader.getBuffer<glm::vec3>(buffer);  
+    //glMemoryBarrier(GL_ALL_BARRIER_BITS);
     glErr();
     std::cout << "Result: " << std::endl;
-    for(int i=0; i<10; i++) {
+    for(int i=0; i<10000; i++) {
         cout << test_res[i] << ", ";
     }
 
-    // Test fractal shader
-//    cg::ComputeShader fractal_shader;
-//    fractal_shader.loadFromFile("../shader/test_image.cs");
-//    fractal_shader.enable();
-//    GLuint tex_id = shader.genTexture(512, 512);
-//    fractal_shader.bindImageTexture("destTex", tex_id); 
-//    glDispatchCompute( 512/16, 512/16, 1 ); // 512^2 threads in blocks of 16 
-//
-//    glGenVertexArrays(1, &vao);
-//
-    //fullscreenShader = new cg::Shader();
-    //fullscreenShader->loadVertexShaderFromFile("../shader/empty.vert");
-    //fullscreenShader->loadGeometryShaderFromFile("../shader/fullscreen_quad.geom");
-    //fullscreenShader->loadFragmentShaderFromFile("../shader/fullscreen_quad.frag");
-    //fullscreenShader->enable();
-    //fullscreenShader->setTexture("Texture", tex_id);
 
+    glGenVertexArrays(1, &vao);
+    // Test fractal shader
+    //cg::ComputeShader fractal_shader;
+    //fractal_shader.loadFromFile("../shader/test_image.cs");
+    //fractal_shader.enable();
+    //GLuint tex_id = shader.genTexture(512, 512);
+    //fractal_shader.bindImageTexture("destTex", tex_id); 
+    //glDispatchCompute( 512/16, 512/16, 1 ); // 512^2 threads in blocks of 16 
+
+    fullscreenShader = new cg::Shader();
+    fullscreenShader->loadVertexShaderFromFile("../shader/empty.vert");
+    fullscreenShader->loadGeometryShaderFromFile("../shader/fullscreen_quad.geom");
+    fullscreenShader->loadFragmentShaderFromFile("../shader/fullscreen_quad.frag");
+    fullscreenShader->enable();
+    fullscreenShader->setTexture("Texture", tex_id_north);
 }
 
 void GlViewer::paintGL() {
 	glClear(GL_COLOR_BUFFER_BIT);
 	if (!m_scene) return;
 
-    //fullscreenShader->enable();
-    //glBindVertexArray( vao );
-    //glDrawArrays( GL_POINTS, 0, 1 );
-    //glBindVertexArray(0);
+    fullscreenShader->enable();
+    glBindVertexArray( vao );
+    glDrawArrays( GL_POINTS, 0, 1 );
+    glBindVertexArray(0);
 }
 
 void GlViewer::wheelEvent(QWheelEvent *event) {
