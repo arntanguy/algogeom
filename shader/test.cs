@@ -4,11 +4,11 @@ layout (local_size_x = 1) in;
 
 layout(std430, binding = 2) buffer MyBuffer
 {
-	float val[];
+	vec3 val[];
 };
 
 void main(void)
 {
-    val[gl_WorkGroupID.x] = pow(val[gl_WorkGroupID.x],2);
+    val[gl_WorkGroupID.x] = val[gl_WorkGroupID.x]*float(gl_WorkGroupID.x);
 }
 

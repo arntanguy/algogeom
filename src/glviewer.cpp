@@ -67,19 +67,14 @@ void GlViewer::initializeGL() {
 
     max_size();
 
-    std::vector<glm::vec3> normals(10000);
-    for(int i=0; i<10000; i++) {
-        normals[i] = glm::vec3(1., 0., 1.);
-    }
-
-    std::vector<GLfloat> test(10);
+    std::vector<glm::vec3> normals(10);
     for(int i=0; i<10; i++) {
-        test[i] = i; 
+        normals[i] = glm::vec3(1., 0., 1.);
     }
 
     cg::ComputeShader shader;
     shader.loadFromFile("../shader/test.cs");
-    GLuint buffer = shader.createBuffer(test);
+    GLuint buffer = shader.createBuffer(normals);
     cout << "Buffer id: " << buffer << endl;
     //GLuint tex_id_north = shader.genTexture(1024, 1024);
     //GLuint tex_id_south = shader.genTexture(1024, 1024);
@@ -88,7 +83,7 @@ void GlViewer::initializeGL() {
     //shader.bindImageTexture("south_hemisphere", tex_id_south);
 
     shader.enable();
-    shader.bindBuffer("MyBuffer", buffer);
+    shader.bindBuffer("MyBuffer", buffer, 2);
     glErr();
 
     // Create groups of 1024 normals for computation
@@ -97,7 +92,7 @@ void GlViewer::initializeGL() {
     //glDispatchCompute( 1024/16, 1024/16, 1);
     glDispatchCompute(10, 1, 1);
 
-    GLfloat *test_res = shader.getBuffer<GLfloat>(buffer);  
+    glm::vec3 *test_res = shader.getBuffer<glm::vec3>(buffer);  
     glErr();
     std::cout << "Result: " << std::endl;
     for(int i=0; i<10; i++) {

@@ -56,21 +56,15 @@ class ComputeShader : public AbstractShader
         }
 
         // Shader must be enabled!
-        void bindBuffer(const std::string& uniformName, const GLuint& bufferId)
+        void bindBuffer(const std::string& uniformName, const GLuint& bufferId, const GLuint& bufferBinding)
         {
             cout << "binding buffer " << bufferId << " to uniform " << uniformName << endl;
 
 
             GLuint storage_block_index = glGetProgramResourceIndex( mProgramHandle, GL_SHADER_STORAGE_BLOCK, "MyBuffer") ;
             cout << "storage_block_index: " << storage_block_index << endl;
-            glShaderStorageBlockBinding(mProgramHandle, storage_block_index, 2);
-            glBindBufferBase( GL_SHADER_STORAGE_BUFFER, 2, bufferId );
-
-            //if(storage_block_index != -1 && storage_block_index  != GL_INVALID_INDEX)  {
-            //    glBindBufferBase( GL_SHADER_STORAGE_BUFFER, storage_block_index, bufferId );
-            //}
-            //else
-            //    cerr << "Warning: uniform block not found in shader" << endl;
+            glShaderStorageBlockBinding(mProgramHandle, storage_block_index, bufferBinding);
+            glBindBufferBase( GL_SHADER_STORAGE_BUFFER, bufferBinding, bufferId );
         }
 
         template<typename T>
