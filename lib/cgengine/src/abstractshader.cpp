@@ -5,6 +5,9 @@
 #include <stdexcept>
 #include <iostream>
 
+#define GLM_FORCE_RADIANS
+#include <glm/ext.hpp>
+
 using namespace std;
 
 namespace cg
@@ -170,4 +173,45 @@ int AbstractShader::getVariableId(const std::string& strVariable) const
     return uniformId;
 }
 
+/**
+ * @brief Sets an uniform GLSL float value
+ * WARNING: This has to be called after the shader has been enabled (by calling the enable() function)!
+ *
+ * @param uniformVarName
+ *      The uniform variable name in the GLSL shader
+ * @param value
+ *      The value to set
+ */
+void AbstractShader::setUniform(const std::string &uniformVarName, float value)
+{
+    glUniform1f(getVariableId(uniformVarName), value);
+}
+
+void AbstractShader::setUniform(const std::string &uniformVarName, int value)
+{
+    glUniform1i(getVariableId(uniformVarName), value);
+}
+
+
+void AbstractShader::setUniform(const std::string &uniformVarName,
+                        const glm::vec2& vector)
+{
+    glUniform2f(getVariableId(uniformVarName), vector.x, vector.y);
+}
+void AbstractShader::setUniform(const std::string &uniformVarName,
+                        const glm::vec3& vector)
+{
+    glUniform3f(getVariableId(uniformVarName), vector.x, vector.y, vector.z);
+}
+
+void AbstractShader::setUniform(const std::string &uniformVarName, const glm::vec4& vector)
+{
+    glUniform4f(getVariableId(uniformVarName), vector.x, vector.y, vector.z, vector.t);
+}
+
+void AbstractShader::setUniform(const std::string &uniformVarName, const glm::mat4& mat)
+{
+    glUniformMatrix4fv(getVariableId(uniformVarName), 1, GL_FALSE,
+                       glm::value_ptr(mat));
+}
 }

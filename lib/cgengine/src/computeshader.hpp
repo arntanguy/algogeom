@@ -68,18 +68,17 @@ class ComputeShader : public AbstractShader
         }
 
         template<typename T>
-        T* getBuffer(GLuint bufferID)
+        T* getBuffer(GLuint bufferID, int size)
         {
-            cout << "getBuffer" << endl;
+            cout << "getBuffer " << sizeof(T) << endl;
             glBindBuffer(GL_SHADER_STORAGE_BUFFER, bufferID);
             // Copy data
-            T *buffer = static_cast<T*>(glMapBufferRange( GL_SHADER_STORAGE_BUFFER, 0, sizeof(T)*10, GL_MAP_READ_BIT));
-            //glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
+            T *buffer = (T*)(glMapBufferRange( GL_SHADER_STORAGE_BUFFER, 0, sizeof(T)*size, GL_MAP_READ_BIT ));
+           //glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
             return buffer;
         }
 
         GLuint genTexture(const unsigned int& width, const unsigned int& height) {
-        	// We create a single uint32 channel 512^2 texture
             GLuint texHandle;
         	glGenTextures(1, &texHandle);
         
@@ -100,7 +99,7 @@ class ComputeShader : public AbstractShader
             int texture_id = getVariableId(uniformName.c_str());
             if(texture_id != -1)  {
                 cout << "bind image texture to unit " << texture_id << endl;
-        	    glBindImageTexture(texture_id, tex_id, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R32I);
+        	    glBindImageTexture(texture_id, tex_id, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
             }
             else
                 cout << "Warning : texture not found in shader" << endl;

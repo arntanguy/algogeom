@@ -34,26 +34,4 @@ Shader::Shader() : BaseShader()
 {
 }
 
-void Shader::setUniform(const std::string &uniformVarName,
-                        const glm::vec2& vector)
-{
-    glUniform2f(getVariableId(uniformVarName), vector.x, vector.y);
-}
-void Shader::setUniform(const std::string &uniformVarName,
-                        const glm::vec3& vector)
-{
-    glUniform3f(getVariableId(uniformVarName), vector.x, vector.y, vector.z);
-}
-
-void Shader::setUniform(const std::string &uniformVarName, const glm::vec4& vector)
-{
-    glUniform4f(getVariableId(uniformVarName), vector.x, vector.y, vector.z, vector.t);
-}
-
-void Shader::setUniform(const std::string &uniformVarName, const glm::mat4& mat)
-{
-    glUniformMatrix4fv(getVariableId(uniformVarName), 1, GL_FALSE,
-                       glm::value_ptr(mat));
-}
-
 }

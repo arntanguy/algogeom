@@ -328,24 +328,6 @@ void BaseShader::bindTextures()
 }
 
 
-/**
- * @brief Sets an uniform GLSL float value
- * WARNING: This has to be called after the shader has been enabled (by calling the enable() function)!
- *
- * @param uniformVarName
- *      The uniform variable name in the GLSL shader
- * @param value
- *      The value to set
- */
-void BaseShader::setUniform(const std::string &uniformVarName, float value)
-{
-    glUniform1f(getVariableId(uniformVarName), value);
-}
-
-void BaseShader::setUniform(const std::string &uniformVarName, int value)
-{
-    glUniform1i(getVariableId(uniformVarName), value);
-}
 
 bool BaseShader::setIn(std::shared_ptr<cg::VBO>& vbo, const std::vector<std::string>& inNames)
 {

@@ -3,6 +3,7 @@
 
 #include <GL/glew.h>
 #include <GL/gl.h>
+#include <glm/glm.hpp>
 
 #include <string>
 
@@ -43,9 +44,6 @@ class AbstractShader
         int getVariableId(const std::string& strVariable) const;
 
 
-        //virtual void setUniform(const std::string &uniformVarName, float value);
-        //virtual void setUniform(const std::string &uniformVarName, int value);
-
     public:
         AbstractShader();
         virtual ~AbstractShader();
@@ -57,6 +55,14 @@ class AbstractShader
         {
             return mProgramHandle;
         }
+
+        virtual void setUniform(const std::string &uniformVarName, float value);
+        virtual void setUniform(const std::string &uniformVarName, int value);
+        virtual void setUniform(const std::string &uniformVarName, const glm::vec2& vector);
+        virtual void setUniform(const std::string &uniformVarName, const glm::vec3& vector);
+        virtual void setUniform(const std::string &uniformVarName, const glm::vec4& vector);
+        virtual void setUniform(const std::string &uniformVarName, const glm::mat4& mat);
+
 
 };
 }

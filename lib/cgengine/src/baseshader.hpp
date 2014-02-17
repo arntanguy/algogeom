@@ -61,9 +61,6 @@ public:
     void enable();
     static void disable();
 
-    virtual void setUniform(const std::string &uniformVarName, float value);
-    virtual void setUniform(const std::string &uniformVarName, int value);
-
     // VBO set input variable
     bool setIn(std::shared_ptr<cg::VBO>& vbo, const std::vector<std::string>& inNames);
     bool setIn(std::shared_ptr<cg::VBO>& vbo, const std::initializer_list<std::string>& inNames)

@@ -67,19 +67,29 @@ void GlViewer::initializeGL() {
 
     max_size();
 
-    std::vector<glm::vec3> normals(10000);
-    for(int i=0; i<10000; i++) {
-        normals[i] = glm::vec3(1., 0., 1.);
+    const int size = 1024*10;
+    const float beta = 90.f;
+    const float tex_res = (beta+1)*2;
+    cout << "====================" << endl;
+    cout << "Parameters:" << endl;
+    cout << "\tBeta: " << beta << endl;
+    cout << "\tTexture resolution: " << tex_res << endl;
+    cout << "====================" << endl;
+
+    std::vector<glm::vec4> normals(size);
+    for(int i=0; i<size; i++) {
+        normals[i] = glm::vec4(1., 1., 0., 0.);
     }
 
     cg::ComputeShader shader;
     shader.loadFromFile("../shader/gen_sampler_sphere.cs");
     GLuint buffer = shader.createBuffer(normals);
     cout << "Buffer id: " << buffer << endl;
-    GLuint tex_id_north = shader.genTexture(1024, 1024);
-    GLuint tex_id_south = shader.genTexture(1024, 1024);
+    GLuint tex_id_north = shader.genTexture(tex_res, tex_res);
+    GLuint tex_id_south = shader.genTexture(tex_res, tex_res);
     //cout << "Tex id: " << tex_id_north <<", " << tex_id_south << endl;
     shader.enable();
+    shader.setUniform("beta", beta);
     shader.bindImageTexture("north_hemisphere", tex_id_north);
     shader.bindImageTexture("south_hemisphere", tex_id_south);
 
@@ -92,11 +102,11 @@ void GlViewer::initializeGL() {
     glDispatchCompute( normals.size()/1024.f, 1, 1 ); 
     glMemoryBarrier(GL_ALL_BARRIER_BITS);
 
-    glm::vec3 *test_res = shader.getBuffer<glm::vec3>(buffer);  
+    glm::vec4 *test_res = shader.getBuffer<glm::vec4>(buffer, size);  
     //glMemoryBarrier(GL_ALL_BARRIER_BITS);
     glErr();
     std::cout << "Result: " << std::endl;
-    for(int i=0; i<10000; i++) {
+    for(int i=0; i<size; i++) {
         cout << test_res[i] << ", ";
     }
 

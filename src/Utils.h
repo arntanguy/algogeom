@@ -19,6 +19,7 @@ int printOglError(const char* file, int line);
 /**
  * Overload some glm stream operators
  **/
+std::ostream &operator<< (std::ostream &out, const glm::vec2 &vec);
 std::ostream &operator<< (std::ostream &out, const glm::vec3 &vec);
 std::ostream &operator<< (std::ostream &out, const glm::mat3 &vec);
 std::ostream &operator<< (std::ostream &out, const glm::vec4 &vec);

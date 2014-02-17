@@ -51,10 +51,6 @@ class Shader : public BaseShader
 {
 public:
     Shader();
-    void setUniform(const std::string &uniformVarName, const glm::vec2& vector);
-    void setUniform(const std::string &uniformVarName, const glm::vec3& vector);
-    void setUniform(const std::string &uniformVarName, const glm::vec4& vector);
-    void setUniform(const std::string &uniformVarName, const glm::mat4& mat);
 
 };
 
