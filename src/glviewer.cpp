@@ -116,7 +116,15 @@ void GlViewer::initializeGL() {
     //}
 
 
+
     glGenVertexArrays(1, &vao);
+    // Test fractal shader
+    //cg::ComputeShader fractal_shader;
+    //fractal_shader.loadFromFile("../shader/test_image.cs");
+    //fractal_shader.enable();
+    //GLuint tex_id = shader.genTexture(512, 512);
+    //fractal_shader.bindImageTexture("destTex", tex_id); 
+    //glDispatchCompute( 512/16, 512/16, 1 ); // 512^2 threads in blocks of 16 
 
 
     std::shared_ptr<cg::BaseTexture> tex = std::shared_ptr<cg::BaseTexture>(new cg::BaseTexture(GL_RGBA, GL_RGBA));
@@ -124,22 +132,21 @@ void GlViewer::initializeGL() {
     tex->setTextureImage();
 
     // Test fractal shader
-    cg::ComputeShader fractal_shader;
-    fractal_shader.loadFromFile("../shader/test_image.cs");
-    fractal_shader.enable();
-    fractal_shader.bindTextureImage("destTex", tex);
+    //cg::ComputeShader fractal_shader;
+    //fractal_shader.loadFromFile("../shader/test_image.cs");
+    //fractal_shader.enable();
+    //fractal_shader.bindTextureImage("destTex", tex);
     //fractal_shader.setTexture("destTex", tex);
     //GLuint tex_id = shader.genTexture(512, 512);
     //fractal_shader.bindImageTexture("destTex", tex); 
-    glDispatchCompute( 512/16, 512/16, 1 ); // 512^2 threads in blocks of 16 
+    //glDispatchCompute( 512/16, 512/16, 1 ); // 512^2 threads in blocks of 16 
 
     fullscreenShader = new cg::Shader();
     fullscreenShader->loadVertexShaderFromFile("../shader/empty.vert");
     fullscreenShader->loadGeometryShaderFromFile("../shader/fullscreen_quad.geom");
     fullscreenShader->loadFragmentShaderFromFile("../shader/fullscreen_quad.frag");
     fullscreenShader->enable();
-    fullscreenShader->setTexture("Texture", tex);
-
+    //fullscreenShader->setTexture("Texture", tex_id_north);
 }
 
 void GlViewer::paintGL() {

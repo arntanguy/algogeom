@@ -19,8 +19,7 @@ endif()
 set( QT_USE_QTXML    TRUE )
 set( QT_USE_QTMAIN   TRUE )
 set( QT_USE_QTSCRIPT  TRUE )
-set( QT_USE_QTOPENGL  TRUE )
-
+set( QT_USE_QTOPENGL  TRUE ) 
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/CMakeModules)
 
 find_package(CGAL COMPONENTS)
@@ -93,7 +92,9 @@ if( CGAL_FOUND AND QT4_FOUND AND OPENGL_FOUND )
     # use the Qt MOC preprocessor on classes that derives from QObject
     #qt4_generate_moc( window.h moc_window.cxx )
     #qt4_generate_moc( glviewer.h moc_glviewer.cxx )
-	include_directories(${INCLUDES}, ${SYSTEM_INCLUDES}, ${SRC})
+	include_directories(${INCLUDES})
+    include_directories(${SYSTEM_INCLUDES})
+    include_directories(${SRC})
     link_directories("${CMAKE_CURRENT_LIST_DIR}/lib/cgengine/lib")
 
     # The executable itself.
