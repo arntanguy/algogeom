@@ -1,6 +1,7 @@
 #include "scene.h"
 #include<cmath>
 #include<sstream>
+#include<chrono>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/features2d/features2d.hpp>
@@ -43,9 +44,19 @@ int main()
 //	normal.insert(normal.end(),{0,-1,0});
 //	normal.insert(normal.end(),{0,0,-1});
 	
+    std::chrono::time_point<std::chrono::system_clock> start, end;
+    start = std::chrono::system_clock::now();
 	
 	s.compute_gauss(hn,hs,normal,rows,rows,beta);
 
+    end = std::chrono::system_clock::now();
+	std::cout << normal.size() << std::endl;
+
+    std::chrono::duration<double> elapsed_seconds = end - start;
+    std::time_t end_time = std::chrono::system_clock::to_time_t(end);
+
+    std::cout << "\n\nfinished computation at " << std::ctime(&end_time)
+        << "elapsed time: " << elapsed_seconds.count() << "s\n";
 
 
 
