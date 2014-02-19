@@ -22,10 +22,11 @@
  * Local size: 1024.x
  * Globalsize.x Groups of 1024 normals
  */
-void kernel gauss_sphere(global float4* normals, global const int* north_hemisphere, global const int* south_hemisphere)
+void kernel gauss_sphere(global float4* normals, global int* north_hemisphere, global int* south_hemisphere)
 {
     private int index = get_global_id(0);
 
+    printf("normals %f", normals[index].x);
     //north_hemisphere[index] = index;
     //south_hemisphere[index] = index;
 }

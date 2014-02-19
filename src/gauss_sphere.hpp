@@ -11,6 +11,7 @@ class GaussSphere
         cl::CommandQueue mCommandQueue;
         cl::Buffer mNormalsBuf;
         int mNumNormals;
+        int mNormalsBufSize;
         cl::Buffer mNorthHemisphereBuf;
         cl::Buffer mSouthHemisphereBuf;
         int mResolution;
@@ -20,17 +21,20 @@ class GaussSphere
             : mContext(context), mCommandQueue(command_queue)
         { }
 
-        void setupBuffers(const std::vector<cl_float>& normals, int w, int h)
+        void setupBuffers(const std::vector<glm::vec4>& normals, int w, int h)
         {
             mNumNormals = normals.size();
             mResolution = w * h;
+            mNormalsBufSize = sizeof(cl_float) * 4 * mNumNormals;
             std::cout<< "Creating buffer with  " << mNumNormals << " normals and " << mResolution << " pixels" << std::endl;
 
-            mNormalsBuf = cl::Buffer(mContext, CL_MEM_READ_WRITE, sizeof(cl_float) * mNumNormals);
+            mNormalsBuf = cl::Buffer(mContext, CL_MEM_READ_WRITE, mNormalsBufSize);
             mNorthHemisphereBuf = cl::Buffer(mContext, CL_MEM_READ_WRITE, sizeof(cl_int) * mResolution);
             mSouthHemisphereBuf = cl::Buffer(mContext, CL_MEM_READ_WRITE, sizeof(cl_int) * mResolution);
 
-            if(mCommandQueue.enqueueWriteBuffer(mNormalsBuf, CL_TRUE, 0, sizeof(cl_float) * mNumNormals, normals.data()) != CL_SUCCESS) throw "fuck";
+            if(mCommandQueue.enqueueWriteBuffer(mNormalsBuf, CL_TRUE, 0, mNormalsBufSize, normals.data()) != CL_SUCCESS) {
+                throw std::runtime_error("GaussSphere::Failed to upload normals");
+            }
         }
 
         void readNorthHemisphere(std::vector<cl_int>& output)
@@ -45,12 +49,12 @@ class GaussSphere
             mCommandQueue.enqueueReadBuffer(mNormalsBuf, CL_TRUE, 0, sizeof(cl_int) * mResolution, output.data());
         }
 
-        void readNormals(std::vector<cl_float>& output)
+        void readNormals(std::vector<glm::vec4>& output)
         {
             std::cout << "readNormals" << std::endl;
             output.clear();
             output.resize(mNumNormals);
-            mCommandQueue.enqueueReadBuffer(mNormalsBuf, CL_TRUE, 0, sizeof(cl_float) * mNumNormals, &output[0]);
+            mCommandQueue.enqueueReadBuffer(mNormalsBuf, CL_TRUE, 0, sizeof(cl_float) * mNumNormals, output.data());
             mCommandQueue.finish();
         }
 

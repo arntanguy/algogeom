@@ -71,8 +71,8 @@ int main(int argc, char **argv)
     GaussSphere gf(context, queue);
 
     const int NB_NORMALS = 10;
-    std::vector<cl_float> normals(4*NB_NORMALS);
-    normals[0] = 32.f;
+    std::vector<glm::vec4> normals(NB_NORMALS);
+    normals[0] = glm::vec4(32.f);
     cout << "Normals before kernel" << endl;
     for(auto vec : normals) {
         std::cout  << vec << ", ";
