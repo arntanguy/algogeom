@@ -10,8 +10,6 @@
 #include <string>
 #include<vector>
 #include<algorithm>
-// Qt
-//#include <QtOpenGL>
 
 
 //CGAL
@@ -24,7 +22,7 @@
 
 //#include"cloud_segmentation.h"
 #include"types.h"
-
+#include"HPoint.h"
 typedef CGAL::Exact_predicates_inexact_constructions_kernel Kernel;
 typedef CGAL::Triangulation_vertex_base_with_info_3<unsigned int, Kernel> Vertex_base;
 //typedef CGAL::Triangulation_vertex_base_3<Kernel> Vertex_base;
@@ -40,9 +38,12 @@ class Scene
 public:
 //	ScanLidar sl;
 	Delaunay delaunay;
-	std::vector<Point_d> vpoint;
+//	std::vector<Point_d> vpoint;
 	std::vector<Point_d> vcolor_point;
+	std::vector<Point_d> cam;
         std::vector<std::pair<Point_d, unsigned int>> vpoint_indice;
+	std::vector<HPoint> vhpoint;
+	std::vector<std::vector<std::size_t>> spherical_neighborhood;
 private:
 
 public:
@@ -56,7 +57,17 @@ public:
 	{
 	}
 
-    bool loadPLY(const std::string& );
+    bool loadPLY(const std::string& path_to_ply);
+    bool load_cam(const std::string& path_to_cam);
+	void compute_Knearest_neighbors(const std::size_t& K);
+	void compute_normal();
+	void get_all_normal(std::vector<float>& normal_vec3f);
+	void compute_gauss(std::vector<std::size_t>& hn,
+						  std::vector<std::size_t>& hs,
+						  const std::vector<float>& normal,
+						  const std::size_t& rows,
+						  const std::size_t& cols,
+						  const double& beta);
     //void loadPLYcertis(const std::string& );
     void compute_delaunay()
     {

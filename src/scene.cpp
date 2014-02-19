@@ -1,6 +1,6 @@
 #include "scene.h"
 #include "Ply.hpp"
-
+#include<fstream>
 using namespace std;
 using I::misc::Ply;
 
@@ -11,17 +11,33 @@ Scene::~Scene()
 {
 }
 
-Scene::~Scene()
-{
-}
-
 //void loadPLYcertis(const std::string& );
+bool Scene::load_cam(const std::string& path)
+{
+	std::ifstream ifs;
+	ifs.open(path);
+	if(!ifs.is_open())
+		return false;
+	std::size_t nb_cam;
+	ifs >> nb_cam;
+	cam.reserve(nb_cam);
+	double x,y,z;
+	for(int i=0; i<6; i++)
+	{
+		ifs >> x >> y >> z;
+		cam.emplace_back(x,y,z);
+	}
+	ifs.close();
+	return true;
+}
 bool Scene::loadPLY(const std::string& path)
 {
-	vpoint.clear();
+
+	vhpoint.clear();
 	vpoint_indice.clear();
 	std::vector< Point_d > points_temp;
 	std::vector< Point_d > color_temp;
+	std::vector<size_t> camera_index;
 	Ply ply;
 	if (!ply.open(path)){ return false;}
 	for (Ply::ElementsIterator it = ply.elements_begin(); it != ply.elements_end(); ++it)
@@ -35,6 +51,7 @@ bool Scene::loadPLY(const std::string& path)
 		size_t num_vertices = element.count();
 		points_temp.resize(num_vertices);
 		color_temp.resize(num_vertices);
+		camera_index.resize(num_vertices);
 		if (element.num_properties()>6)
 		{
 			for (size_t i=0; i<num_vertices; i++)
@@ -45,14 +62,15 @@ bool Scene::loadPLY(const std::string& path)
 				 ||(!ply.read(element.property(2), z))
 				 ||(!ply.read(element.property(3), r))
 				 ||(!ply.read(element.property(4), g))
-				 ||(!ply.read(element.property(5), b)))
+			 	 ||(!ply.read(element.property(5), b))
+				 ||(!ply.read(element.property(6), camera_index[i])))
 				{
 					cerr << "error while reading (pos) vertex " 
 						<< i+1 << endl;
 					ply.close();
 					return false;
 				}
-				for(int k=6;k<element.num_properties();k++)
+				for(int k=7;k<element.num_properties();k++)
 				{
 					double tempp;
 					if(!ply.read(element.property(k), tempp))
@@ -75,12 +93,12 @@ bool Scene::loadPLY(const std::string& path)
 			return false;
 		}
 	}
-	vpoint.reserve(points_temp.size());
+	vhpoint.reserve(points_temp.size());
 	vpoint_indice.reserve(points_temp.size());
 	vcolor_point.reserve(points_temp.size());
 	for(int i=0;i<points_temp.size();i++)
 	{
-		vpoint.push_back(points_temp[i]);
+		vhpoint.push_back(HPoint(points_temp[i],camera_index[i]));
 		vpoint_indice.push_back({points_temp[i],i});
 		vcolor_point.push_back(color_temp[i]);
 //		if(is_normal_given) normal.push_back(normals_temp[i]);
@@ -138,4 +156,127 @@ bool Scene::loadPLY(const std::string& path)
    //     }
    // }
 
-   // ply.close();
+   //
+// ply.close();
+void Scene::compute_Knearest_neighbors(const std::size_t& K)
+{
+//		cout<<"Computing the K-nearest neighbors";
+
+		//1-Neighborhood computation and reset the attributes of the structure points
+		std::map<Point_d,std::size_t> map_indice_point;
+		std::list<Point_d> list_points;
+
+		for(std::size_t i=0;i<vhpoint.size();++i){
+			map_indice_point[vhpoint[i].position]=i;
+			list_points.push_back(vhpoint[i].position);
+		}
+		Tree tree(list_points.begin(), list_points.end());
+
+		for(std::size_t i=0;i<vhpoint.size();++i){
+			Point_d query=vhpoint[i].position;
+			Neighbor_search search(tree, query, K+1);
+
+			std::vector<std::size_t> index_of_neighbors;
+			for(Neighbor_search::iterator it = search.begin(); it != search.end(); ++it){
+				//if(std::sqrt(it->second)<0.5){
+					std::map<Point_d,std::size_t>::iterator iter =map_indice_point.begin();
+					iter= map_indice_point.find(it->first);
+					if( iter != map_indice_point.end() && iter->second!=i ) index_of_neighbors.push_back(iter->second);
+				//}else{break;}
+			}
+			spherical_neighborhood.push_back(index_of_neighbors);
+		}
+
+		//2-creation of the bounding box
+//		BBox_scan = CGAL::bounding_box(list_points.begin(), list_points.end());
+//		BBox_diagonal=sqrt( pow(BBox_scan.xmax()-BBox_scan.xmin(),2) +  pow(BBox_scan.ymax()-BBox_scan.ymin(),2) +  pow(BBox_scan.zmax()-BBox_scan.zmin(),2) );
+//	
+//		cout<<endl<<endl;
+//
+//		return true;
+}
+void Scene::compute_normal()
+{
+		const std::size_t nb_max_neighbors=10;
+		for(std::size_t k=0;k<vhpoint.size();++k){
+
+			std::list<Point_d> list_pts;
+			list_pts.push_back(vhpoint[k].position);
+
+			for(std::size_t n=0,
+					end=std::min(nb_max_neighbors,spherical_neighborhood[k].size());
+					n<end;++n){
+					list_pts.push_back(vhpoint[spherical_neighborhood[k][n]].position);
+			}
+			
+			Plane_3 plane_temp;
+			double average_distance=linear_least_squares_fitting_3(list_pts.begin(),list_pts.end(),plane_temp, CGAL::Dimension_tag<0>());
+
+			Vector_3 normal_temp=plane_temp.orthogonal_vector();
+
+		//	int 
+		/*	for(int n=0;n<(int)spherical_neighborhood[k].size();n++){
+				if(k>spherical_neighborhood[k][n] && n<nb_max_neighbors){
+					int index_neighbor=spherical_neighborhood[k][n];
+					if(vhpoint[index_neighbor].normal * normal_temp <0 ) normal_temp=-normal_temp;
+				break;
+				}
+				else break;
+			}*/
+
+			FT normal_temp_norm=1/sqrt(normal_temp.squared_length());
+			normal_temp = normal_temp*normal_temp_norm;
+		//normal re-orientation
+		//using camera position
+		//         /                     |
+		//camera <[  -  - - - - -    <---|  the normal "watch" the cam
+		//         \                     |
+		//le produit scalaire de la normal avec le vectrue point/cam doit etre positif
+		//si negatif, alors *=-1
+			if(normal_temp*(cam[vhpoint[k].camera_index]-vhpoint[k].position)<0)
+				normal_temp = normal_temp*-1;
+			vhpoint[k].normal = normal_temp;
+		}
+
+
+}
+void Scene::get_all_normal(std::vector<float>& normal_vec3f)
+{
+	normal_vec3f.clear();
+	normal_vec3f.reserve(3*vhpoint.size());
+	for(const HPoint& hp : vhpoint)
+	{
+		for(auto begin = hp.normal.cartesian_begin(),end=hp.normal.cartesian_end();
+				begin!=end;++begin)
+		{
+			normal_vec3f.push_back(*begin);
+		}
+	}
+}
+
+void Scene::compute_gauss(std::vector<std::size_t>& north_hemisphere,
+						  std::vector<std::size_t>& south_hemisphere,
+						  const std::vector<float>& normal,
+						  const std::size_t& rows,
+						  const std::size_t& cols,
+						  const double& beta)
+{
+	double tmp;
+	for(auto begin = normal.begin(),end=normal.end();begin!=end;++begin)
+	{
+		const float& x = *begin;
+		const float& y = *++begin;
+		const float& z = *++begin;
+//		std::cout << x << ' ' << y << ' ' << z << std::endl;
+		if(z<0)
+		{
+			tmp = (beta+1.)/(1.-z);
+			south_hemisphere[rows*floor(tmp*y)+rows*rows/2+floor(tmp*x)]++;
+//			imageAtomicAdd(south_hemisphere, ivec2(floor((beta+1f)/(1f-normal.z)*normal.xy)), 1u);
+    	} else {
+			tmp = (beta+1.)/(1.+z);
+			north_hemisphere[rows*floor(tmp*y)+floor(tmp*x)+rows*rows/2]++;
+	    	//imageAtomicAdd(north_hemisphere, floor((beta+1f)/(1f+normal.z)*normal.xy),1u);
+    	}
+	}
+}
