@@ -73,12 +73,12 @@ int main(int argc, char **argv)
     const int NB_NORMALS = 10;
     std::vector<glm::vec4> normals(NB_NORMALS);
     for(int i=0; i<normals.size(); i++) {
-        normals[i] = glm::vec4(1., 1., 1., 0.);
+        normals[i] = glm::vec4(1., -1., 0., 0.);
     }
 
-    const float beta = 90.f;
-    const float tex_res = 400; // (beta+1)*2;
-    cout << "beta: "<< beta << endl;
+    const float d = 1.;
+    const float p = 200.;
+    const int tex_res = 2*(1+ceil(p/d));
     cout << "resolution: " << tex_res << endl;
 
     cout << "Setting up kernel" << endl;

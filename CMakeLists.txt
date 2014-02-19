@@ -7,7 +7,8 @@ set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/CMakeModules")
 
 set(SRC src)
 set(LIB_DIR .)
-set(INCLUDES src "lib/cgengine/src")
+set(INCLUDES "${CMAKE_CURRENT_LIST_DIR}/lib/cgengine/src")
+message(STATUS "INCLUDES ${INCLUDES}")
 
 set( CMAKE_ALLOW_LOOSE_LOOP_CONSTRUCTS true )
 
@@ -20,6 +21,8 @@ set( QT_USE_QTMAIN   TRUE )
 set( QT_USE_QTSCRIPT  TRUE )
 set( QT_USE_QTOPENGL  TRUE )
 
+set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/CMakeModules)
+
 find_package(CGAL COMPONENTS)
 find_package(Qt4)
 find_package(GLUT)
@@ -27,7 +30,7 @@ find_package(OpenGL)
 find_package(GLEW)
 
 find_package(OpenCL REQUIRED)
-
+find_package(OpenCV REQUIRED COMPONENTS core ml features2d highgui nonfree)
 
 #message( STATUS "********CXXflags: " ${CMAKE_CXX_FLAGS} )
 include(${CGAL_USE_FILE})#change CXX flags
@@ -41,6 +44,10 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native -ffast-math")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3")
 message( STATUS "CXXflags: " ${CMAKE_CXX_FLAGS} )
+
+set(SYSTEM_INCLUDES 
+	${OPENCV_INCLUDE_DIRS}
+)
 
 set( SRCS 
 ${SRC}/glviewer.cpp 
@@ -58,6 +65,12 @@ ${SRC}/gauss_sphere.cpp
 ${SRC}/openCLUtilities.cpp
 ${SRC}/Utils.cpp
 )
+
+set(SRC_TEST
+	${SRC}/test_scene.cpp
+	${SRC}/scene.cpp
+)
+
 set(SRC_MOC ${SRC}/window.h ${SRC}/glviewer.h)
 
 if(WIN32)
@@ -80,14 +93,15 @@ if( CGAL_FOUND AND QT4_FOUND AND OPENGL_FOUND )
     # use the Qt MOC preprocessor on classes that derives from QObject
     #qt4_generate_moc( window.h moc_window.cxx )
     #qt4_generate_moc( glviewer.h moc_glviewer.cxx )
-
-    include_directories(${INCLUDES})
+	include_directories(${INCLUDES}, ${SYSTEM_INCLUDES}, ${SRC})
     link_directories("${CMAKE_CURRENT_LIST_DIR}/lib/cgengine/lib")
 
     # The executable itself.
     add_executable( ${PROJECT_NAME} ${SRCS} ${QT_MOCS} ${QT_UI_FILES} ${QT_RESOURCE_FILES} )
 	add_executable(fusion_file ${SRC_FUSION})
     add_executable(gauss_gpu ${SRC_GAUSS})
+	add_executable(test_scene ${SRC_TEST})
+
     # Link with Qt libraries
     target_link_libraries( ${PROJECT_NAME} ${QT_LIBRARIES} )
 
@@ -96,7 +110,10 @@ if( CGAL_FOUND AND QT4_FOUND AND OPENGL_FOUND )
 
     # Link with CGAL
     target_link_libraries( ${PROJECT_NAME} ${CGAL_LIBRARIES} ${CGAL_3RD_PARTY_LIBRARIES})
+    target_link_libraries( test_scene ${CGAL_LIBRARIES} ${CGAL_3RD_PARTY_LIBRARIES})
 
+	#Link with opencv
+    target_link_libraries( test_scene ${OPENCV_LIBRARIES})
     # XXX
     target_link_libraries( ${PROJECT_NAME} CGEngine )
 
