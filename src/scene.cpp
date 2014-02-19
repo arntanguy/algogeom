@@ -7,6 +7,9 @@ using I::misc::Ply;
 Scene::Scene() 
 {
 }
+Scene::~Scene() 
+{
+}
 
 //void loadPLYcertis(const std::string& );
 bool Scene::loadPLY(const std::string& path)
