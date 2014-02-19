@@ -2,6 +2,8 @@ set(PROJECT_NAME miniprojet)
 project (${PROJECT_NAME})
 
 cmake_minimum_required(VERSION 2.8)
+# Path to the cmake module path
+set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/CMakeModules")
 
 set(SRC src)
 set(LIB_DIR .)
@@ -23,6 +25,8 @@ find_package(Qt4)
 find_package(GLUT)
 find_package(OpenGL)
 find_package(GLEW)
+
+find_package(OpenCL REQUIRED)
 
 
 #message( STATUS "********CXXflags: " ${CMAKE_CXX_FLAGS} )
@@ -48,6 +52,12 @@ ${SRC}/Utils.cpp
 ) 
 
 set( SRC_FUSION ${SRC}/main_fusion.cpp)
+set( SRC_GAUSS 
+${SRC}/gauss_sphere_gpu_main.cpp
+${SRC}/gauss_sphere.cpp
+${SRC}/openCLUtilities.cpp
+${SRC}/Utils.cpp
+)
 set(SRC_MOC ${SRC}/window.h ${SRC}/glviewer.h)
 
 if(WIN32)
@@ -77,6 +87,7 @@ if( CGAL_FOUND AND QT4_FOUND AND OPENGL_FOUND )
     # The executable itself.
     add_executable( ${PROJECT_NAME} ${SRCS} ${QT_MOCS} ${QT_UI_FILES} ${QT_RESOURCE_FILES} )
 	add_executable(fusion_file ${SRC_FUSION})
+    add_executable(gauss_gpu ${SRC_GAUSS})
     # Link with Qt libraries
     target_link_libraries( ${PROJECT_NAME} ${QT_LIBRARIES} )
 
@@ -88,6 +99,8 @@ if( CGAL_FOUND AND QT4_FOUND AND OPENGL_FOUND )
 
     # XXX
     target_link_libraries( ${PROJECT_NAME} CGEngine )
+
+    target_link_libraries( gauss_gpu ${OPENCL_LIBRARIES} ${GLEW_LIBRARY} ${OPENGL_LIBRARY})
 
 
 else()

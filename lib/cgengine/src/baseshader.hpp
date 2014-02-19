@@ -52,7 +52,6 @@ public:
     void loadGeometryShaderFromFile(const std::string &shader);
     void loadGeometryShader(const std::string &shader);
 
-    void setTexture(const std::string &uniformLocation, GLuint texture);
     void setTexture(const std::string &uniformLocation, const std::shared_ptr<BaseTexture>& texture);
     void clear_texture();
 

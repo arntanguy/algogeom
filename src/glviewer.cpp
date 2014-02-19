@@ -5,9 +5,12 @@
 #include "qttexture.hpp"
 #include <QImage>
 
+#include <memory>
 #include <vector>
 #include <glm/glm.hpp>
 #include "Utils.h"
+
+#include "basetexture.hpp"
 
 using namespace std;
 
@@ -81,51 +84,62 @@ void GlViewer::initializeGL() {
         normals[i] = glm::vec4(1., 1., 0., 0.);
     }
 
-    cg::ComputeShader shader;
-    shader.loadFromFile("../shader/gen_sampler_sphere.cs");
-    GLuint buffer = shader.createBuffer(normals);
-    cout << "Buffer id: " << buffer << endl;
-    GLuint tex_id_north = shader.genTexture(tex_res, tex_res);
-    GLuint tex_id_south = shader.genTexture(tex_res, tex_res);
+    //cg::ComputeShader shader;
+    //shader.loadFromFile("../shader/gen_sampler_sphere.cs");
+    //GLuint buffer = shader.createBuffer(normals);
+    //cout << "Buffer id: " << buffer << endl;
+    //GLuint tex_id_north = shader.genTexture(tex_res, tex_res);
+    //GLuint tex_id_south = shader.genTexture(tex_res, tex_res);
     //cout << "Tex id: " << tex_id_north <<", " << tex_id_south << endl;
-    shader.enable();
-    shader.setUniform("beta", beta);
-    shader.bindImageTexture("north_hemisphere", tex_id_north);
-    shader.bindImageTexture("south_hemisphere", tex_id_south);
 
-    shader.bindBuffer("MyBuffer", buffer, 2);
-    glErr();
+    //shader.enable();
+    //shader.setUniform("beta", beta);
+    //shader.bindImageTexture("north_hemisphere", tex_id_north);
+    //shader.bindImageTexture("south_hemisphere", tex_id_south);
 
-    glMemoryBarrier(GL_ALL_BARRIER_BITS);
-    // Create groups of 1024 normals for computation
-    // XXX: should ensure that group size is < GL_MAX_COMPUTE_WORK_GROUP_COUNT 
-    glDispatchCompute( normals.size()/1024.f, 1, 1 ); 
-    glMemoryBarrier(GL_ALL_BARRIER_BITS);
+    //shader.bindBuffer("MyBuffer", buffer, 2);
+    //glErr();
 
-    glm::vec4 *test_res = shader.getBuffer<glm::vec4>(buffer, size);  
     //glMemoryBarrier(GL_ALL_BARRIER_BITS);
-    glErr();
-    std::cout << "Result: " << std::endl;
-    for(int i=0; i<size; i++) {
-        cout << test_res[i] << ", ";
-    }
+    //// Create groups of 1024 normals for computation
+    //// XXX: should ensure that group size is < GL_MAX_COMPUTE_WORK_GROUP_COUNT 
+    ////glDispatchCompute( normals.size()/1024.f, 1, 1 ); 
+    //glDispatchCompute( size, size, 1 ); 
+    //glMemoryBarrier(GL_ALL_BARRIER_BITS);
+
+    //glm::vec4 *test_res = shader.getBuffer<glm::vec4>(buffer, size);  
+    ////glMemoryBarrier(GL_ALL_BARRIER_BITS);
+    //glErr();
+    //std::cout << "Result: " << std::endl;
+    //for(int i=0; i<size; i++) {
+    //    cout << test_res[i] << ", ";
+    //}
 
 
     glGenVertexArrays(1, &vao);
+
+
+    std::shared_ptr<cg::BaseTexture> tex = std::shared_ptr<cg::BaseTexture>(new cg::BaseTexture(GL_RGBA, GL_RGBA));
+    tex->genTexture(512, 512);
+    tex->setTextureImage();
+
     // Test fractal shader
-    //cg::ComputeShader fractal_shader;
-    //fractal_shader.loadFromFile("../shader/test_image.cs");
-    //fractal_shader.enable();
+    cg::ComputeShader fractal_shader;
+    fractal_shader.loadFromFile("../shader/test_image.cs");
+    fractal_shader.enable();
+    fractal_shader.bindTextureImage("destTex", tex);
+    //fractal_shader.setTexture("destTex", tex);
     //GLuint tex_id = shader.genTexture(512, 512);
-    //fractal_shader.bindImageTexture("destTex", tex_id); 
-    //glDispatchCompute( 512/16, 512/16, 1 ); // 512^2 threads in blocks of 16 
+    //fractal_shader.bindImageTexture("destTex", tex); 
+    glDispatchCompute( 512/16, 512/16, 1 ); // 512^2 threads in blocks of 16 
 
     fullscreenShader = new cg::Shader();
     fullscreenShader->loadVertexShaderFromFile("../shader/empty.vert");
     fullscreenShader->loadGeometryShaderFromFile("../shader/fullscreen_quad.geom");
     fullscreenShader->loadFragmentShaderFromFile("../shader/fullscreen_quad.frag");
     fullscreenShader->enable();
-    fullscreenShader->setTexture("Texture", tex_id_north);
+    fullscreenShader->setTexture("Texture", tex);
+
 }
 
 void GlViewer::paintGL() {

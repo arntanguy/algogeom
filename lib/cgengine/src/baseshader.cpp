@@ -283,19 +283,6 @@ bool BaseShader::hasShaderSupport()
     return GLEW_ARB_vertex_shader && GLEW_ARB_fragment_shader;
 }
 
-/**
- * @brief Sets a texture from an OpenGL texture ID
- *
- * @param uniformLocation
- * @param texture
- */
-void BaseShader::setTexture(const std::string &uniformLocation, GLuint texture)
-{
-    int uniformID = getVariableId(uniformLocation);
-    //cout << "setTexture " << texture << " for uniform " << uniformLocation << "("<<uniformID<<")" << endl;
-    m_textures[uniformID] = shared_ptr<BaseTexture>(new BaseTexture(texture));
-}
-
 void BaseShader::setTexture(const std::string &uniformLocation, const shared_ptr<BaseTexture>& texture)
 {
     int uniformID = getVariableId(uniformLocation);
@@ -319,6 +306,18 @@ void BaseShader::bindTextures()
         glActiveTexture(GL_TEXTURE0 + texture_slot_index);
         //std::cout << "bind: " << it->second->getTextureType() << ", " << it->second->getTextureId() << std::endl;
         glBindTexture(it->second->getTextureType(), it->second->getTextureId());
+        if(it->second->isTextureImage()) {
+        	//// Because we're also using this tex as an image (in order to write to it),
+        	//// we bind it to an image unit as well
+            int texture_id = it->first; 
+            if(texture_id != -1)  {
+                // XXX: do not hardcode format
+        	    glBindImageTexture(texture_id, it->second->getTextureId(), 0, GL_FALSE, 0, GL_READ_ONLY, GL_R32I);
+            }
+            else
+                cout << "Warning : texture not found in shader" << endl;
+        }
+
         // Binds to the shader
         glUniform1i(it->first, texture_slot_index);
         texture_slot_index++;

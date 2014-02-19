@@ -4,6 +4,8 @@
 #include "abstractshader.hpp"
 #include <iostream>
 #include <vector>
+#include "basetexture.hpp"
+#include <memory>
 
 using namespace std;
 
@@ -78,32 +80,11 @@ class ComputeShader : public AbstractShader
             return buffer;
         }
 
-        GLuint genTexture(const unsigned int& width, const unsigned int& height) {
-            GLuint texHandle;
-        	glGenTextures(1, &texHandle);
-        
-        	glBindTexture(GL_TEXTURE_2D, texHandle);
-        	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-            glBindTexture(GL_TEXTURE_2D, 0);
-        
-        	return texHandle;
+        void bindTextureImage(const std::string& uniformName, std::shared_ptr<BaseTexture>& tex) {
+            GLint uniformID = getVariableId(uniformName);
+            tex->bind(uniformID);
         }
 
-        void bindImageTexture(const std::string& uniformName, const GLuint& tex_id)
-        {
-            glBindTexture(GL_TEXTURE_2D, tex_id);
-        	//// Because we're also using this tex as an image (in order to write to it),
-        	//// we bind it to an image unit as well
-            int texture_id = getVariableId(uniformName.c_str());
-            if(texture_id != -1)  {
-                cout << "bind image texture to unit " << texture_id << endl;
-        	    glBindImageTexture(texture_id, tex_id, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
-            }
-            else
-                cout << "Warning : texture not found in shader" << endl;
-        }
 
 };
 
