@@ -72,15 +72,17 @@ int main(int argc, char **argv)
 
     const int NB_NORMALS = 10;
     std::vector<glm::vec4> normals(NB_NORMALS);
-    normals[0] = glm::vec4(32.f);
-    cout << "Normals before kernel" << endl;
-    for(auto vec : normals) {
-        std::cout  << vec << ", ";
+    for(int i=0; i<normals.size(); i++) {
+        normals[i] = glm::vec4(1., 1., 1., 0.);
     }
-    cout << endl;
+
+    const float beta = 90.f;
+    const float tex_res = 400; // (beta+1)*2;
+    cout << "beta: "<< beta << endl;
+    cout << "resolution: " << tex_res << endl;
 
     cout << "Setting up kernel" << endl;
-    gf.setupBuffers(normals, 10, 10);
+    gf.setupBuffers(normals, tex_res, tex_res);
     gf.runKernel(gauss_sphere_kernel);
     gf.readNormals(normals);
 
@@ -88,6 +90,16 @@ int main(int argc, char **argv)
     for(auto vec : normals) {
         std::cout  << vec << ", ";
     }
+    cout << endl;
+
+
+    std::vector<cl_int> northHemisphere;
+    gf.readNorthHemisphere(northHemisphere);
+    std::cout << "North hemisphere: " << northHemisphere[49724] << endl;
+
+    std::vector<cl_int> southHemisphere;
+    gf.readSouthHemisphere(southHemisphere);
+    std::cout << "North hemisphere: " << southHemisphere[49724] << endl;
 
     end = std::chrono::system_clock::now();
 

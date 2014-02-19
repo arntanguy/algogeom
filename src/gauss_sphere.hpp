@@ -39,14 +39,18 @@ class GaussSphere
 
         void readNorthHemisphere(std::vector<cl_int>& output)
         {
-            output.reserve(mResolution*3);
-            mCommandQueue.enqueueReadBuffer(mNormalsBuf, CL_TRUE, 0, sizeof(cl_int) * mResolution, output.data());
+            std::cout << "Read north hemisphere" << std::endl;
+            output.clear();
+            output.resize(mResolution);
+            mCommandQueue.enqueueReadBuffer(mNorthHemisphereBuf, CL_TRUE, 0, sizeof(cl_int) * mResolution, output.data());
+            mCommandQueue.finish();
         }
 
         void readSouthHemisphere(std::vector<cl_int>& output)
         {
-            output.reserve(mResolution*3);
-            mCommandQueue.enqueueReadBuffer(mNormalsBuf, CL_TRUE, 0, sizeof(cl_int) * mResolution, output.data());
+            output.clear();
+            output.resize(mResolution);
+            mCommandQueue.enqueueReadBuffer(mSouthHemisphereBuf, CL_TRUE, 0, sizeof(cl_int) * mResolution, output.data());
         }
 
         void readNormals(std::vector<glm::vec4>& output)
@@ -54,7 +58,7 @@ class GaussSphere
             std::cout << "readNormals" << std::endl;
             output.clear();
             output.resize(mNumNormals);
-            mCommandQueue.enqueueReadBuffer(mNormalsBuf, CL_TRUE, 0, sizeof(cl_float) * mNumNormals, output.data());
+            mCommandQueue.enqueueReadBuffer(mNormalsBuf, CL_TRUE, 0, sizeof(glm::vec4) * mNumNormals, output.data());
             mCommandQueue.finish();
         }
 
@@ -64,7 +68,7 @@ class GaussSphere
                 kernel.setArg(1, mNorthHemisphereBuf);
                 kernel.setArg(2, mSouthHemisphereBuf);
 
-                int global = mNumNormals / 4;
+                int global = mNumNormals;
 
                 std::cout << "Running with NDRange " << global  << std::endl;
                 if(mCommandQueue.enqueueNDRangeKernel(kernel, cl::NullRange, cl::NDRange(global), cl::NullRange) != CL_SUCCESS) {

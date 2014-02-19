@@ -18,15 +18,39 @@
 
 
 /**
- * Global size: nb normals/localsize
- * Local size: 1024.x
- * Globalsize.x Groups of 1024 normals
+ * Use float4 because float3 would be padded to float4 anyway, so avoid confusion
  */
-void kernel gauss_sphere(global float4* normals, global int* north_hemisphere, global int* south_hemisphere)
+void kernel gauss_sphere(volatile global float4* normal, global int* north_hemisphere, global int* south_hemisphere)
 {
+    // XXX
+    private const float beta = 90;
+    private const int width = 400;
+
     private int index = get_global_id(0);
 
-    printf("normals %f", normals[index].x);
-    //north_hemisphere[index] = index;
-    //south_hemisphere[index] = index;
+    //printf("normals %f", normal[index].x);
+    private float4 n= normalize(normal[index]);
+
+    if(n.z < 0) {
+        // Coordinate in image
+        private int2 coord = convert_int2(((beta+1.f)/(1.f-n.z) * n.xy));
+        // Coordinate in array
+        private int c = coord.x + coord.y*width;
+        printf("\ncoord.x %i\n", coord.x);
+        printf("\ncoord.y %i\n", coord.y);
+        printf("\nc %i\n", c);
+        // Increment value
+        atomic_inc(&north_hemisphere[c]);
+        printf("\nnorth hemisphere %i\n", north_hemisphere[c]);
+    } else {
+        // Coordinate in image
+        private int2 coord = convert_int2(((beta+1.f)/(1.f-n.z) * n.xy));
+        // Coordinate in array
+        private int c = coord.x + coord.y*width;
+        printf("\ncoord.x %i\n", coord.x);
+        printf("\ncoord.y %i\n", coord.y);
+        printf("\nc %i\n", c);
+        // Increment value
+        atomic_inc(&south_hemisphere[c]);
+    }
 }
