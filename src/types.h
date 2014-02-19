@@ -6,6 +6,8 @@
 #include <list>
 #include <map>
 
+#include<algorithm>
+#include<memory>
 
 
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>

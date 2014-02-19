@@ -5,7 +5,7 @@
 #include "Ply.hpp"
 #include "Visualization_Tools.h"
 #include "polyhedron_flo.h"
-#include "triangulation_flo.h"
+//#include "triangulation_flo.h"
 
 
 using std::vector;
@@ -95,7 +95,8 @@ class ScanLidar
 
 public:
 
-	ScanLidar() : labeler(tr){}
+	//ScanLidar() : labeler(tr){}
+	ScanLidar(){}
 	~ScanLidar(){}
 
 
@@ -388,7 +389,7 @@ bool load_points(string filename_o)
 			std::vector< Point_d > points_go;
 			std::vector< CGAL::Color > colors_go;
 			for(int i=0;i<HPS.size();i++){points_go.push_back(HPS[i].position); colors_go.push_back(CGAL::BLACK);}
-			char *outputtp= "input_noise_outliers.ply";
+			const char* outputtp= "input_noise_outliers.ply";
 			colorpointset2ply(outputtp,points_go,colors_go);
 		}
 
