@@ -34,7 +34,7 @@ int main(int argc, char **argv)
     }
 
     cl::Platform default_platform;
-    default_platform = all_platforms[0];
+    default_platform = all_platforms[1];
     cout << "Using platform: " << default_platform.getInfo<CL_PLATFORM_NAME>() << endl;
 
     //get default device of the default platform
@@ -70,7 +70,7 @@ int main(int argc, char **argv)
     cl::Kernel gauss_sphere_kernel(program, "gauss_sphere");
     GaussSphere gf(context, queue);
 
-    const int NB_NORMALS = 10;
+    const int NB_NORMALS = 10000000;
     std::vector<glm::vec4> normals(NB_NORMALS);
     for(int i=0; i<normals.size(); i++) {
         normals[i] = glm::vec4(1., -1., 0., 0.);
@@ -86,11 +86,11 @@ int main(int argc, char **argv)
     gf.runKernel(gauss_sphere_kernel);
     gf.readNormals(normals);
 
-    cout << "Printing normals after kernel" << endl;
-    for(auto vec : normals) {
-        std::cout  << vec << ", ";
-    }
-    cout << endl;
+//    cout << "Printing normals after kernel" << endl;
+//    for(auto vec : normals) {
+//        std::cout  << vec << ", ";
+//    }
+//    cout << endl;
 
 
     std::vector<cl_int> northHemisphere;

@@ -30,15 +30,15 @@ void kernel gauss_sphere(volatile global float4* normal, global int* north_hemis
     private const float h = d+p;
     // Half width (of image)
     private const float w2 = 1+p/d;
-    printf("w2: %f\n", w2);
+    //printf("w2: %f\n", w2);
 
     private int index = get_global_id(0);
     private float4 n = normalize(normal[index]);
 
 
-    printf("n.x %f\n" , n.x);
-    printf("n.y %f\n" , n.y);
-    printf("n.z %f\n" , n.z);
+    //printf("n.x %f\n" , n.x);
+    //printf("n.y %f\n" , n.y);
+    //printf("n.z %f\n" , n.z);
 
     // C is above for the south hemisphere,
     // beneath for the north one
@@ -48,37 +48,37 @@ void kernel gauss_sphere(volatile global float4* normal, global int* north_hemis
     else
         C = d*((float4)(0., -1., 0., 0.));
 
-    printf("c.x %f\n" , C.x);
-    printf("c.y %f\n" , C.y);
-    printf("c.z %f\n" , C.z);
+    //printf("c.x %f\n" , C.x);
+    //printf("c.y %f\n" , C.y);
+    //printf("c.z %f\n" , C.z);
     // We took the unit sphere, so n is directly the position on the sphere
     float4 direction = n-C;
-    printf("direction.x %f\n" , direction.x);
-    printf("direction.y %f\n" , direction.y);
-    printf("direction.z %f\n" , direction.z);
+    //printf("direction.x %f\n" , direction.x);
+    //printf("direction.y %f\n" , direction.y);
+    //printf("direction.z %f\n" , direction.z);
 
     // cos(vertical, direction)
     float dot_p = fabs(dot(direction, (float4)(0.f, 1.f, 0.f, 0.f)));
-    printf("dot: %f\n", dot_p);
+    //printf("dot: %f\n", dot_p);
 
     // Trigo to compute length of vector from C to plane
     float l = h/dot_p;
-    printf("l: %f\n", l);
-    printf("n: %f\n", n);
+    //printf("l: %f\n", l);
+    //printf("n: %f\n", n);
     // Project onto plane
     float4 point = C + l * direction;
-    printf("point.x %f\n" , point.x);
-    printf("point.y %f\n" , point.y);
-    printf("point.z %f\n" , point.z);
+    //printf("point.x %f\n" , point.x);
+    //printf("point.y %f\n" , point.y);
+    //printf("point.z %f\n" , point.z);
 
     // Convert from plane coordinates to image coordinates
     int2 coord = convert_int2((float2)(w2, w2) + point.xz);
-    printf("coord.x %i\n" , coord.x);
-    printf("coord.y %i\n" , coord.y);
+    //printf("coord.x %i\n" , coord.x);
+    //printf("coord.y %i\n" , coord.y);
     // Convert to accumulator array index
     int c = coord.x + 2*w2*coord.y;
 
-    printf("\n\n");
+    //printf("\n\n");
     // Accumulate value
     if(n.y < 0) {
         // Increment value
