@@ -1,19 +1,14 @@
 #version 440 
 
-layout (local_size_x = 10) in;
-layout(std430, binding = 0) buffer MyBuffer
-{
-	float val[];
-};
+layout (local_size_x = 1) in;
 
-layout (binding=1, r32f) uniform writeonly image2D destTex;
-uniform float beta;
+layout(std430, binding = 2) buffer MyBuffer
+{
+	vec3 val[];
+};
 
 void main(void)
 {
-    val[gl_WorkGroupID.x] = pow(val[gl_WorkGroupID.x],2);
-    ivec2 storePos = ivec2(gl_WorkGroupID.x, 1.);
-    const vec4 color = vec4(1.0, 0.0, 0.0, 0.0);
-    imageStore(destTex, storePos, color);
+    val[gl_WorkGroupID.x] = val[gl_WorkGroupID.x]*float(gl_WorkGroupID.x);
 }
 
