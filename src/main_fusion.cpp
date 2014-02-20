@@ -27,6 +27,8 @@ int main()
 
 //*/
 	fusion_file_ply("../data/laser/maison_Mougins/Mougins_scan_centers.txt","mougin.ply",10);
+	fusion_file_ply("../data/laser/appartement/Appartment_scan_centers.txt","appartment.ply",10);
+	fusion_file_ply("../data/laser/Kahn/Kahn_outside_scan_centers.txt","khan.ply",10);
 
 
 	return EXIT_SUCCESS;
