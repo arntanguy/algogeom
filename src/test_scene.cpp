@@ -92,7 +92,8 @@ int main()
 	}
 	std::ostringstream oss;
 	std::string str;
-	for(std::size_t i = 0; i<vmhn.size(); ++i)
+	char c;
+	for(std::size_t i = 0; i<vmhn.size();)
 	{
 		oss.str("");
 //		oss << "hn" << i;
@@ -106,7 +107,15 @@ int main()
 		str = oss.str().c_str();
 		cv::namedWindow(str, CV_WINDOW_NORMAL);
 		cv::imshow(str, vmhs[i]*8);
-	while(cv::waitKey()!='q');
+		c=cv::waitKey();
+		switch(c)
+		{
+			case 'e':if(i<vmhn.size()-1)++i;break;
+			case 'a':if(i!=0)--i;break;
+			case 'q':i=vmhn.size();break;
+
+		}
+		//while((c=cv::waitKey())!='q');
 	}
 	//while(cv::waitKey()!='q');
 

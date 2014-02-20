@@ -62,6 +62,7 @@ public:
 	void compute_Knearest_neighbors(const std::size_t& K);
 	void compute_normal();
 	void get_all_normal(std::vector<float>& normal_vec3f);
+	//using stereographic projection to save the gauss sphere
 	void compute_gauss(std::vector<std::size_t>& hn,
 						  std::vector<std::size_t>& hs,
 						  const std::vector<float>& normal,
