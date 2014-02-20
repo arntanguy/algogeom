@@ -61,6 +61,7 @@ public:
     bool load_cam(const std::string& path_to_cam);
 	void compute_Knearest_neighbors(const std::size_t& K);
 	void compute_normal();
+	void get_all_normal_vec4(std::vector<float>& normal);
 	void get_all_normal(std::vector<float>& normal_vec3f);
 	//using stereographic projection to save the gauss sphere
 	void compute_gauss(std::vector<std::size_t>& hn,
@@ -68,7 +69,8 @@ public:
 						  const std::vector<float>& normal,
 						  const std::size_t& rows,
 						  const std::size_t& cols,
-						  const double& beta);
+						  const double& beta,
+						  const double& alpha);
     //void loadPLYcertis(const std::string& );
     void compute_delaunay()
     {

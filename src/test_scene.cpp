@@ -27,7 +27,11 @@ int main()
 	std::size_t rows;
 	std::vector<std::size_t> hn;
 	std::vector<std::size_t> hs;
+	const double alpha = 1.;
+
 	for(const std::size_t& beta : {10,15,20,25,30,45,90,135,180,360,1000})
+	{
+	for(const double& alpha : {1,2,3,4,5})
 	{
 		std::size_t rows = 2*(beta+1)+1;
 		hn.clear();
@@ -47,7 +51,7 @@ int main()
     std::chrono::time_point<std::chrono::system_clock> start, end;
     start = std::chrono::system_clock::now();
 	
-	s.compute_gauss(hn,hs,normal,rows,rows,beta);
+	s.compute_gauss(hn,hs,normal,rows,rows,beta,alpha);
 
     end = std::chrono::system_clock::now();
 	std::cout << normal.size() << std::endl;
@@ -89,6 +93,7 @@ int main()
 	}
 	vmhn.push_back(mhn.clone());
 	vmhs.push_back(mhs.clone());
+	}
 	}
 	std::ostringstream oss;
 	std::string str;

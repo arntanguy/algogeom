@@ -253,13 +253,28 @@ void Scene::get_all_normal(std::vector<float>& normal_vec3f)
 		}
 	}
 }
+void Scene::get_all_normal_vec4(std::vector<float>& normal)
+{
+	normal.clear();
+	normal.reserve(4*vhpoint.size());
+	for(const HPoint& hp : vhpoint)
+	{
+		for(auto begin = hp.normal.cartesian_begin(),end=hp.normal.cartesian_end();
+				begin!=end;++begin)
+		{
+			normal.push_back(*begin);
+		}
+		normal.push_back(0);
+	}
+}
 
 void Scene::compute_gauss(std::vector<std::size_t>& north_hemisphere,
 						  std::vector<std::size_t>& south_hemisphere,
 						  const std::vector<float>& normal,
 						  const std::size_t& rows,
 						  const std::size_t& cols,
-						  const double& beta)
+						  const double& beta,
+						  const double& alpha)
 {
 	double tmp;
 	for(auto begin = normal.begin(),end=normal.end();begin!=end;++begin)
@@ -270,11 +285,11 @@ void Scene::compute_gauss(std::vector<std::size_t>& north_hemisphere,
 //		std::cout << x << ' ' << y << ' ' << z << std::endl;
 		if(z<0)
 		{
-			tmp = (beta+1.)/(1.-z);
+			tmp = (beta+alpha)/(alpha-z);
 			south_hemisphere[rows*floor(tmp*y)+rows*rows/2+floor(tmp*x)]++;
 //			imageAtomicAdd(south_hemisphere, ivec2(floor((beta+1f)/(1f-normal.z)*normal.xy)), 1u);
     	} else {
-			tmp = (beta+1.)/(1.+z);
+			tmp = (beta+alpha)/(alpha+z);
 			north_hemisphere[rows*floor(tmp*y)+floor(tmp*x)+rows*rows/2]++;
 	    	//imageAtomicAdd(north_hemisphere, floor((beta+1f)/(1f+normal.z)*normal.xy),1u);
     	}
