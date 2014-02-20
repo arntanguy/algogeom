@@ -276,6 +276,50 @@ void Scene::compute_gauss(std::vector<std::size_t>& north_hemisphere,
 						  const double& beta,
 						  const double& alpha)
 {
+	//
+	//
+	//       x z = + alpha : centre  of projection
+	//       |
+	//       |
+	// ______|
+	//        \
+	//       | \
+	//          \
+	//		 |
+	//____________________
+	//       |            \
+	//                     \
+	//       |              \
+	//       x               \  z = -beta : plan sur lequel on projette la sphere
+	//                        \  (projection stereographique) 
+	//_________________________\
+	//
+	// on projette la sphere unite sur le plan:
+	//
+	// soit M = (x,y,z) un point de la sphere.
+	//      P = (0,0,alpha) le centre de projection.
+	//      delta = P + lambda(M-P) la droite PM
+	//      PI = -beta le plan
+	//
+	//      I \in \delta\inter\PI
+	//      I verifie l'equation Pz + lambda(Mz-Pz) = -beta
+	//      D'ou alpha + lambda(z-alpha) = -beta
+	//      D'ou lambda = - (beta+alpha) / (z-alpha)
+	//      			= (alpha+beta)/(alpha-z)
+	//
+	//      D'ou I = P + (alpha+beta)/(alpha-z) * (M-P);
+	//
+	//		Si on remplace alpha par -alpha et beta par -beta,
+	//		on obtient:
+	//         lambda =  (-alpha-beta) / (-alpha-z)
+	//      			= (alpha+beta)/(alpha+z)
+	//      D'ou I = P + (alpha+beta)/(alpha+z) * (M-P);
+	//
+	//
+	//		
+	//
+	//
+	//
 	double tmp;
 	for(auto begin = normal.begin(),end=normal.end();begin!=end;++begin)
 	{
