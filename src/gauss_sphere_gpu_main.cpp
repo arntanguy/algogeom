@@ -72,13 +72,12 @@ int main(int argc, char **argv)
 
 
     cl::Kernel gauss_sphere_kernel(program, "gauss_sphere");
-    GaussSphere gf(context, queue);
+    const float beta = 90;
+    const float alpha = 1;
+    const int tex_res = 2*(1+ceil(beta/alpha))+1; 
+    cout << "resolution: " << tex_res << endl;
 
-    const int NB_NORMALS = 10000000;
-    std::vector<glm::vec4> normals(NB_NORMALS);
-    for(int i=0; i<normals.size(); i++) {
-        normals[i] = glm::vec4(1., -1., 0., 0.);
-    }
+    GaussSphere gf(context, queue, alpha, beta);
 
 	Scene s;
 	s.loadPLY("../build/result.ply");
@@ -89,32 +88,18 @@ int main(int argc, char **argv)
 	s.get_all_normal_vec4(normal);
 
 
-    const float d = 1.;
-    const float p = 200.;
-    const int tex_res = (90+1)*2+1; //2*(1+ceil(p/d)); 
-    cout << "resolution: " << tex_res << endl;
-
     std::chrono::time_point<std::chrono::system_clock> start, end;
     start = std::chrono::system_clock::now();
 
     cout << "Setting up kernel" << endl;
-    gf.setupBuffers(normal, tex_res, tex_res);
+    gf.setupBuffers(normal);
     gf.runKernel(gauss_sphere_kernel);
-
-//    cout << "Printing normals after kernel" << endl;
-//    for(auto vec : normals) {
-//        std::cout  << vec << ", ";
-//    }
-//    cout << endl;
-
 
     std::vector<cl_int> northHemisphere;
     gf.readNorthHemisphere(northHemisphere);
-    std::cout << "North hemisphere: " << northHemisphere[49724] << endl;
 
     std::vector<cl_int> southHemisphere;
     gf.readSouthHemisphere(southHemisphere);
-    std::cout << "South hemisphere: " << southHemisphere[49724] << endl;
     queue.finish();
 
 	cv::Mat_<float> mhn(tex_res, tex_res);
@@ -146,8 +131,6 @@ int main(int argc, char **argv)
 	cv::imshow("north", mhn);
 	cv::namedWindow("south", CV_WINDOW_NORMAL);
 	cv::imshow("south", mhs);
-	//vmhn.push_back(mhn.clone());
-	//vmhs.push_back(mhs.clone());
 
     end = std::chrono::system_clock::now();
 
