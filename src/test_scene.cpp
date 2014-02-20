@@ -27,7 +27,11 @@ int main()
 	std::size_t rows;
 	std::vector<std::size_t> hn;
 	std::vector<std::size_t> hs;
+	const double alpha = 1.;
+
 	for(const std::size_t& beta : {10,15,20,25,30,45,90,135,180,360,1000})
+	{
+	for(const double& alpha : {1,2,3,4,5})
 	{
 		std::size_t rows = 2*(beta+1)+1;
 		hn.clear();
@@ -47,7 +51,7 @@ int main()
     std::chrono::time_point<std::chrono::system_clock> start, end;
     start = std::chrono::system_clock::now();
 	
-	s.compute_gauss(hn,hs,normal,rows,rows,beta);
+	s.compute_gauss(hn,hs,normal,rows,rows,beta,alpha);
 
     end = std::chrono::system_clock::now();
 	std::cout << normal.size() << std::endl;
@@ -90,9 +94,11 @@ int main()
 	vmhn.push_back(mhn.clone());
 	vmhs.push_back(mhs.clone());
 	}
+	}
 	std::ostringstream oss;
 	std::string str;
-	for(std::size_t i = 0; i<vmhn.size(); ++i)
+	char c;
+	for(std::size_t i = 0; i<vmhn.size();)
 	{
 		oss.str("");
 //		oss << "hn" << i;
@@ -106,7 +112,15 @@ int main()
 		str = oss.str().c_str();
 		cv::namedWindow(str, CV_WINDOW_NORMAL);
 		cv::imshow(str, vmhs[i]*8);
-	while(cv::waitKey()!='q');
+		c=cv::waitKey();
+		switch(c)
+		{
+			case 'e':if(i<vmhn.size()-1)++i;break;
+			case 'a':if(i!=0)--i;break;
+			case 'q':i=vmhn.size();break;
+
+		}
+		//while((c=cv::waitKey())!='q');
 	}
 	//while(cv::waitKey()!='q');
 
