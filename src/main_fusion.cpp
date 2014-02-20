@@ -6,6 +6,7 @@
 
 int main()
 {
+	/*
 	std::chrono::time_point<std::chrono::system_clock> start, end;
 	std::chrono::duration<double> elapsed_seconds;
 
@@ -24,9 +25,8 @@ int main()
 
 	std::cout << "elapsed time: " << elapsed_seconds.count() << std::endl;
 
-
-
-	fusion_file_ply("../data/laser/maison_Mougins/Mougins_scan_centers.txt","result.ply",10);
+//*/
+	fusion_file_ply("../data/laser/maison_Mougins/Mougins_scan_centers.txt","mougin.ply",10);
 
 
 	return EXIT_SUCCESS;
