@@ -7,11 +7,22 @@
 #include <opencv2/features2d/features2d.hpp>
 #include <opencv2/nonfree/nonfree.hpp>
 #include <opencv2/ml/ml.hpp>
-int main()
+int main(int argc, char** argv)
 {
+	std::vector<std::string> ply = {
+		"../build/mougin.ply",
+		"../build/appartment.ply",
+		"../build/khan.ply"
+	};
+	std::vector<std::string> cam = {
+		"../data/laser/maison_Mougins/Mougins_scan_centers.txt",
+		"../data/laser/appartement/Appartment_scan_centers.txt",
+		"../data/laser/Kahn/Kahn_outside_scan_centers.txt"
+	};
+	char idx = (argc==1 ? 0 : argv[1][0] - '0');
 	Scene s;
-	s.loadPLY("../build/result.ply");
-	s.load_cam("../data/laser/maison_Mougins/Mougins_scan_centers.txt");
+	s.loadPLY(ply[idx]);
+	s.load_cam(cam[idx]);
 	s.compute_Knearest_neighbors(10);
 	s.compute_normal();
 	std::vector<float> normal;
@@ -33,11 +44,13 @@ int main()
 	{
 	for(const double& alpha : {1,2,3,4,5})
 	{
-		std::size_t rows = 2*(beta+1)+1;
+		//std::size_t rows = 2*(beta/alpha+1)+1;
+		std::size_t rows = 2*ceil(((alpha+beta)/alpha))+1;
+		std::cout << rows << std::endl;
 		hn.clear();
-		hn.resize(pow(rows,2));
+		hn.resize(pow(rows,2),0);
 		hs.clear();
-		hs.resize(pow(rows,2));
+		hs.resize(pow(rows,2),0);
 	
 	
 //	normal.clear();
@@ -105,13 +118,13 @@ int main()
 		oss << "hn";
 		str = oss.str().c_str();
 		cv::namedWindow(str, CV_WINDOW_NORMAL);
-		cv::imshow(str, vmhn[i]*8);
+		cv::imshow(str, vmhn[i]*16);
 		oss.str("");
 //		oss << "hs" << i;
 		oss << "hs";
 		str = oss.str().c_str();
 		cv::namedWindow(str, CV_WINDOW_NORMAL);
-		cv::imshow(str, vmhs[i]*8);
+		cv::imshow(str, vmhs[i]*16);
 		c=cv::waitKey();
 		switch(c)
 		{
