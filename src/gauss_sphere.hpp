@@ -21,38 +21,24 @@ class GaussSphere
             : mContext(context), mCommandQueue(command_queue)
         { }
 
-        template<typename T>
-        void setupBuffers(const std::vector<T>& normals, int w, int h)
+        void setupBuffers(const std::vector<float>& normals, int w, int h)
         {
             mNumNormals = normals.size();
             mResolution = w * h;
-            mNormalsBufSize = sizeof(T) * mNumNormals;
-            std::cout<< "Creating buffer with  " << mNumNormals << " normals and " << mResolution << " pixels" << std::endl;
+            mNormalsBufSize = sizeof(float) * mNumNormals;
+            std::cout<< "Creating buffer with  " << mNumNormals << " normals and " << mResolution << " pixels" << "sizeof: " << sizeof(float) << std::endl;
 
             mNormalsBuf = cl::Buffer(mContext, CL_MEM_READ_WRITE, mNormalsBufSize);
             mNorthHemisphereBuf = cl::Buffer(mContext, CL_MEM_READ_WRITE, sizeof(cl_int) * mResolution);
             mSouthHemisphereBuf = cl::Buffer(mContext, CL_MEM_READ_WRITE, sizeof(cl_int) * mResolution);
 
+            std::vector<int> val(mResolution, 0);
+            mCommandQueue.enqueueWriteBuffer(mNorthHemisphereBuf, CL_TRUE, 0, sizeof(cl_int) * mResolution, val.data());
+            mCommandQueue.enqueueWriteBuffer(mSouthHemisphereBuf, CL_TRUE, 0, sizeof(cl_int) * mResolution, val.data());
             if(mCommandQueue.enqueueWriteBuffer(mNormalsBuf, CL_TRUE, 0, mNormalsBufSize, normals.data()) != CL_SUCCESS) {
                 throw std::runtime_error("GaussSphere::Failed to upload normals");
             }
         }
-
-        //void setupBuffers(const std::vector<glm::vec4>& normals, int w, int h)
-        //{
-        //    mNumNormals = normals.size();
-        //    mResolution = w * h;
-        //    mNormalsBufSize = sizeof(cl_float) * 4 * mNumNormals;
-        //    std::cout<< "Creating buffer with  " << mNumNormals << " normals and " << mResolution << " pixels" << std::endl;
-
-        //    mNormalsBuf = cl::Buffer(mContext, CL_MEM_READ_WRITE, mNormalsBufSize);
-        //    mNorthHemisphereBuf = cl::Buffer(mContext, CL_MEM_READ_WRITE, sizeof(cl_int) * mResolution);
-        //    mSouthHemisphereBuf = cl::Buffer(mContext, CL_MEM_READ_WRITE, sizeof(cl_int) * mResolution);
-
-        //    if(mCommandQueue.enqueueWriteBuffer(mNormalsBuf, CL_TRUE, 0, mNormalsBufSize, normals.data()) != CL_SUCCESS) {
-        //        throw std::runtime_error("GaussSphere::Failed to upload normals");
-        //    }
-        //}
 
         void readNorthHemisphere(std::vector<cl_int>& output)
         {
@@ -65,6 +51,7 @@ class GaussSphere
 
         void readSouthHemisphere(std::vector<cl_int>& output)
         {
+            std::cout << "Read south hemisphere" << std::endl;
             output.clear();
             output.resize(mResolution);
             mCommandQueue.enqueueReadBuffer(mSouthHemisphereBuf, CL_TRUE, 0, sizeof(cl_int) * mResolution, output.data());
@@ -85,7 +72,7 @@ class GaussSphere
                 kernel.setArg(1, mNorthHemisphereBuf);
                 kernel.setArg(2, mSouthHemisphereBuf);
 
-                int global = mNumNormals;
+                int global = mNumNormals/4;
 
                 std::cout << "Running with NDRange " << global  << std::endl;
                 if(mCommandQueue.enqueueNDRangeKernel(kernel, cl::NullRange, cl::NDRange(global), cl::NullRange) != CL_SUCCESS) {

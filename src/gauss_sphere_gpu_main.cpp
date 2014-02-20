@@ -41,7 +41,7 @@ int main(int argc, char **argv)
     }
 
     cl::Platform default_platform;
-    default_platform = all_platforms[0];
+    default_platform = all_platforms[1];
     cout << "Using platform: " << default_platform.getInfo<CL_PLATFORM_NAME>() << endl;
 
     //get default device of the default platform
@@ -91,16 +91,15 @@ int main(int argc, char **argv)
 
     const float d = 1.;
     const float p = 200.;
-    const int tex_res = 2*(1+ceil(p/d));
+    const int tex_res = (90+1)*2+1; //2*(1+ceil(p/d)); 
     cout << "resolution: " << tex_res << endl;
 
     std::chrono::time_point<std::chrono::system_clock> start, end;
     start = std::chrono::system_clock::now();
 
     cout << "Setting up kernel" << endl;
-    gf.setupBuffers(normals, tex_res, tex_res);
+    gf.setupBuffers(normal, tex_res, tex_res);
     gf.runKernel(gauss_sphere_kernel);
-    gf.readNormals(normals);
 
 //    cout << "Printing normals after kernel" << endl;
 //    for(auto vec : normals) {
@@ -116,6 +115,7 @@ int main(int argc, char **argv)
     std::vector<cl_int> southHemisphere;
     gf.readSouthHemisphere(southHemisphere);
     std::cout << "South hemisphere: " << southHemisphere[49724] << endl;
+    queue.finish();
 
 	cv::Mat_<float> mhn(tex_res, tex_res);
 	cv::Mat_<float> mhs(tex_res, tex_res);
@@ -132,6 +132,7 @@ int main(int argc, char **argv)
 		if(*it_vhs>max)
 			max=*it_vhs;
 	}
+    cout << "Max: " << max << endl;
 	it_vhn = hn.begin();
 	it_vhs = hs.begin();
 	double inv_max = 1.0/max;
@@ -142,7 +143,9 @@ int main(int argc, char **argv)
 		*iths = *it_vhs * inv_max;
 	}
 	cv::namedWindow("north", CV_WINDOW_NORMAL);
-	cv::imshow("north", mhs);
+	cv::imshow("north", mhn);
+	cv::namedWindow("south", CV_WINDOW_NORMAL);
+	cv::imshow("south", mhs);
 	//vmhn.push_back(mhn.clone());
 	//vmhs.push_back(mhs.clone());
 
