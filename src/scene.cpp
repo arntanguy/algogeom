@@ -320,6 +320,10 @@ void Scene::compute_gauss(std::vector<std::size_t>& north_hemisphere,
 	//
 	//
 	//
+		north_hemisphere.clear();
+		north_hemisphere.resize(pow(rows,2),0);
+		south_hemisphere.clear();
+		south_hemisphere.resize(pow(rows,2),0);
 	double tmp;
 	for(auto begin = normal.begin(),end=normal.end();begin!=end;++begin)
 	{
@@ -337,5 +341,74 @@ void Scene::compute_gauss(std::vector<std::size_t>& north_hemisphere,
 			north_hemisphere[rows*floor(tmp*y)+floor(tmp*x)+rows*rows/2]++;
 	    	//imageAtomicAdd(north_hemisphere, floor((beta+1f)/(1f+normal.z)*normal.xy),1u);
     	}
+	}
+}
+void Scene::compute_gauss2(std::vector<std::size_t>& north_hemisphere,
+						  std::vector<std::size_t>& south_hemisphere,
+						  std::vector<std::vector<std::size_t>>& north_hemisphere_idx,
+						  std::vector<std::vector<std::size_t>>& south_hemisphere_idx,
+						  const std::vector<float>& normal,
+						  const std::size_t& rows,
+						  const std::size_t& cols,
+						  const double& beta,
+						  const double& alpha)
+{
+		north_hemisphere.clear();
+		north_hemisphere.resize(pow(rows,2),0);
+		south_hemisphere.clear();
+		south_hemisphere.resize(pow(rows,2),0);
+
+		std::vector<std::size_t> vcase;
+		vcase.reserve(normal.size()/3);
+		std::vector<bool> is_south;
+		is_south.reserve(normal.size()/3);
+	double tmp;
+	std::size_t case_tmp;
+	//compute the gauss sphere
+	const std::size_t rowrow_s_2 = rows*rows/2;
+	const double alphabeta = alpha+beta;
+	for(auto begin = normal.begin(),end=normal.end();begin!=end;++begin)
+	{
+		const float& x = *begin;
+		const float& y = *++begin;
+		const float& z = *++begin;
+		if(z<0)
+		{
+			tmp = alphabeta/(alpha-z);
+			case_tmp = rows*floor(tmp*y)+rowrow_s_2+floor(tmp*x);
+			south_hemisphere[case_tmp]++;
+			vcase.push_back(case_tmp);
+			is_south.push_back(true);
+    	} else {
+			tmp = alphabeta/(alpha+z);
+			case_tmp = rows*floor(tmp*y)+rowrow_s_2+floor(tmp*x);
+			north_hemisphere[case_tmp]++;
+			vcase.push_back(case_tmp);
+			is_south.push_back(false);
+    	}
+	}
+
+	//add a ref to the normal
+	north_hemisphere_idx.resize(north_hemisphere.size());
+	south_hemisphere_idx.resize(south_hemisphere.size());
+	for(int i=0; i<north_hemisphere.size(); ++i)
+	{
+		north_hemisphere_idx[i].reserve(north_hemisphere[i]);
+		south_hemisphere_idx[i].reserve(south_hemisphere[i]);
+	}
+
+	std::size_t cpt=0;
+	auto it_is_south = is_south.begin()-1;
+	auto it_vcase = vcase.begin()-1;
+	for(const std::size_t end=vcase.size(); cpt<end;++cpt)
+	{
+		if(*++it_is_south)
+		{
+			south_hemisphere_idx[*++it_vcase].push_back(cpt);
+		}
+		else
+		{
+			north_hemisphere_idx[*++it_vcase].push_back(cpt);
+		}
 	}
 }

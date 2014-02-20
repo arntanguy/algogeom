@@ -38,6 +38,8 @@ int main(int argc, char** argv)
 	std::size_t rows;
 	std::vector<std::size_t> hn;
 	std::vector<std::size_t> hs;
+	std::vector<std::vector<std::size_t>> hn2;
+	std::vector<std::vector<std::size_t>> hs2;
 	const double alpha = 1.;
 
 	for(const std::size_t& beta : {10,15,20,25,30,45,90,135,180,360,1000})
@@ -47,10 +49,10 @@ int main(int argc, char** argv)
 		//std::size_t rows = 2*(beta/alpha+1)+1;
 		std::size_t rows = 2*ceil(((alpha+beta)/alpha))+1;
 		std::cout << rows << std::endl;
-		hn.clear();
-		hn.resize(pow(rows,2),0);
-		hs.clear();
-		hs.resize(pow(rows,2),0);
+	//	hn.clear();
+	//	hn.resize(pow(rows,2),0);
+	//	hs.clear();
+	//	hs.resize(pow(rows,2),0);
 	
 	
 //	normal.clear();
@@ -74,8 +76,22 @@ int main(int argc, char** argv)
 
     std::cout << "\n\nfinished computation at " << std::ctime(&end_time)
         << "elapsed time: " << elapsed_seconds.count() << "s\n";
+	//	hn.clear();
+	//	hn.resize(pow(rows,2),0);
+	//	hs.clear();
+	//	hs.resize(pow(rows,2),0);
 
 
+    start = std::chrono::system_clock::now();
+	
+	s.compute_gauss2(hn,hs,hn2,hs2,normal,rows,rows,beta,alpha);
+
+    end = std::chrono::system_clock::now();
+	std::cout << normal.size() << std::endl;
+
+    elapsed_seconds = end - start;
+
+    std::cout << "elapsed time: " << elapsed_seconds.count() << "s\n";
 
 	
 
