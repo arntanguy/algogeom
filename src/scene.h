@@ -1,7 +1,5 @@
 #ifndef _SCENE_H_
 #define _SCENE_H_
-#include<GL/glew.h>
-
 
 // std
 #include <fstream>

@@ -63,6 +63,7 @@ ${SRC}/gauss_sphere_gpu_main.cpp
 ${SRC}/gauss_sphere.cpp
 ${SRC}/openCLUtilities.cpp
 ${SRC}/Utils.cpp
+${SRC}/scene.cpp
 )
 
 set(SRC_TEST
@@ -118,7 +119,7 @@ if( CGAL_FOUND AND QT4_FOUND AND OPENGL_FOUND )
     # XXX
     target_link_libraries( ${PROJECT_NAME} CGEngine )
 
-    target_link_libraries( gauss_gpu ${OPENCL_LIBRARIES} ${GLEW_LIBRARY} ${OPENGL_LIBRARY})
+    target_link_libraries( gauss_gpu ${OPENCV_LIBRARIES} ${OPENCL_LIBRARIES} ${GLEW_LIBRARY} ${OPENGL_LIBRARY})
 
 
 else()
