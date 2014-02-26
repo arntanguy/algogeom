@@ -69,6 +69,15 @@ public:
 						  const std::size_t& cols,
 						  const double& beta,
 						  const double& alpha);
+	void compute_gauss2(std::vector<std::size_t>& north_hemisphere,
+						  std::vector<std::size_t>& south_hemisphere,
+						  std::vector<std::vector<std::size_t>>& north_hemisphere_idx,
+						  std::vector<std::vector<std::size_t>>& south_hemisphere_idx,
+						  const std::vector<float>& normal,
+						  const std::size_t& rows,
+						  const std::size_t& cols,
+						  const double& beta,
+						  const double& alpha);
     //void loadPLYcertis(const std::string& );
     void compute_delaunay()
     {

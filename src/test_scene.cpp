@@ -7,6 +7,34 @@
 #include <opencv2/features2d/features2d.hpp>
 #include <opencv2/nonfree/nonfree.hpp>
 #include <opencv2/ml/ml.hpp>
+
+void gray_to_color(const cv::Mat_<float>& src, cv::Mat_<cv::Vec<float,3>>& dst)
+{
+	dst.release();
+	dst.create(src.rows, src.cols);
+	auto v3f = dst.begin()-1;
+	for(auto f = src.begin(),end=src.end();f!=end;++f)
+	{
+		const auto& ff = *f;
+		auto& color = *++v3f;
+		if(ff==0)
+		{
+			color[0]=color[1]=color[2]=0;
+		}
+		else if(ff<.5)
+		{
+			color[0]=1-ff*2;
+			color[1]=ff*2;
+			color[2]=0;
+		}
+		else
+		{
+			color[0]=0;
+			color[1]=2-ff*2;
+			color[2]=ff*2-1;
+		}
+	}
+}
 int main(int argc, char** argv)
 {
 	std::vector<std::string> ply = {
@@ -31,13 +59,15 @@ int main(int argc, char** argv)
 
 	
 
-	std::vector<cv::Mat_<float>> vmhn;
-	std::vector<cv::Mat_<float>> vmhs;
+	std::vector<cv::Mat_<cv::Vec3f>> vmhn;
+	std::vector<cv::Mat_<cv::Vec3f>> vmhs;
 
 	
 	std::size_t rows;
 	std::vector<std::size_t> hn;
 	std::vector<std::size_t> hs;
+	std::vector<std::vector<std::size_t>> hn2;
+	std::vector<std::vector<std::size_t>> hs2;
 	const double alpha = 1.;
 
 	for(const std::size_t& beta : {10,15,20,25,30,45,90,135,180,360,1000})
@@ -47,10 +77,10 @@ int main(int argc, char** argv)
 		//std::size_t rows = 2*(beta/alpha+1)+1;
 		std::size_t rows = 2*ceil(((alpha+beta)/alpha))+1;
 		std::cout << rows << std::endl;
-		hn.clear();
-		hn.resize(pow(rows,2),0);
-		hs.clear();
-		hs.resize(pow(rows,2),0);
+	//	hn.clear();
+	//	hn.resize(pow(rows,2),0);
+	//	hs.clear();
+	//	hs.resize(pow(rows,2),0);
 	
 	
 //	normal.clear();
@@ -74,8 +104,22 @@ int main(int argc, char** argv)
 
     std::cout << "\n\nfinished computation at " << std::ctime(&end_time)
         << "elapsed time: " << elapsed_seconds.count() << "s\n";
+	//	hn.clear();
+	//	hn.resize(pow(rows,2),0);
+	//	hs.clear();
+	//	hs.resize(pow(rows,2),0);
 
 
+    start = std::chrono::system_clock::now();
+	
+	s.compute_gauss2(hn,hs,hn2,hs2,normal,rows,rows,beta,alpha);
+
+    end = std::chrono::system_clock::now();
+	std::cout << normal.size() << std::endl;
+
+    elapsed_seconds = end - start;
+
+    std::cout << "elapsed time: " << elapsed_seconds.count() << "s\n";
 
 	
 
@@ -104,8 +148,11 @@ int main(int argc, char** argv)
 		*ithn = *it_vhn * inv_max;
 		*iths = *it_vhs * inv_max;
 	}
-	vmhn.push_back(mhn.clone());
-	vmhs.push_back(mhs.clone());
+	cv::Mat_<cv::Vec3f>	color_mat;
+	gray_to_color(mhn,color_mat);
+	vmhn.push_back(color_mat.clone());
+	gray_to_color(mhs,color_mat);
+	vmhs.push_back(color_mat.clone());
 	}
 	}
 	std::ostringstream oss;
@@ -114,27 +161,23 @@ int main(int argc, char** argv)
 	for(std::size_t i = 0; i<vmhn.size();)
 	{
 		oss.str("");
-//		oss << "hn" << i;
 		oss << "hn";
 		str = oss.str().c_str();
 		cv::namedWindow(str, CV_WINDOW_NORMAL);
-		cv::imshow(str, vmhn[i]*16);
+		cv::imshow(str, vmhn[i]);
+		//cv::imshow(str, vmhn[i]*16);
 		oss.str("");
-//		oss << "hs" << i;
 		oss << "hs";
 		str = oss.str().c_str();
 		cv::namedWindow(str, CV_WINDOW_NORMAL);
-		cv::imshow(str, vmhs[i]*16);
+		cv::imshow(str, vmhs[i]);
+//		cv::imshow(str, vmhs[i]*16);
 		c=cv::waitKey();
 		switch(c)
 		{
 			case 'e':if(i<vmhn.size()-1)++i;break;
 			case 'a':if(i!=0)--i;break;
 			case 'q':i=vmhn.size();break;
-
 		}
-		//while((c=cv::waitKey())!='q');
 	}
-	//while(cv::waitKey()!='q');
-
 }
