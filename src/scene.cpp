@@ -505,6 +505,8 @@ void Scene::normals_from_gauss(const cv::Mat_<float>& gauss_north, const cv::Mat
     cv::Mat_<float> ghn = gauss_north.clone();
     cv::Mat_<float> ghs = gauss_south.clone();
     cv::Mat result(cv::Size(gauss_north.rows, gauss_north.cols), CV_32FC3); 
+    gauss_north.convertTo(result, CV_32FC3);
+    cv::cvtColor(result, result, CV_GRAY2RGB);
 
     int found = 0;
     while (found++ < 5) {
