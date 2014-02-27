@@ -68,7 +68,12 @@ int main(int argc, char** argv)
 	std::vector<std::size_t> hs;
 	std::vector<std::vector<std::size_t>> hn2;
 	std::vector<std::vector<std::size_t>> hs2;
+
+    std::vector<std::size_t> found_normals;
+    std::vector<std::vector<std::size_t>> found_normals_clusters;
+
 	const double alpha = 1.;
+    const float& threshold = 0.1;
 
 	for(const std::size_t& beta : {10,15,20,25,30,45,90,135,180,360,1000})
 	{
@@ -128,26 +133,9 @@ int main(int argc, char** argv)
 
 	cv::Mat_<float> mhn(rows,rows);
 	cv::Mat_<float> mhs(rows,rows);
+    s.normalize_gauss(hn, hs, mhn, mhs);
+    s.normals_from_gauss(mhn, mhs, found_normals, found_normals_clusters, threshold);
 
-	auto it_vhn = hn.begin();
-	auto it_vhs = hs.begin();
-	std::size_t max(0);
-	for(auto vend = hn.end();it_vhn!=vend;++it_vhn,++it_vhs)
-	{
-		if(*it_vhn>max)
-			max=*it_vhn;
-		if(*it_vhs>max)
-			max=*it_vhs;
-	}
-	it_vhn = hn.begin();
-	it_vhs = hs.begin();
-	double inv_max = 1.0/max;
-	for(auto ithn = mhn.begin(),iths=mhs.begin(),end=mhn.end();ithn!=end;
-			++ithn,++iths,++it_vhn,++it_vhs)
-	{
-		*ithn = *it_vhn * inv_max;
-		*iths = *it_vhs * inv_max;
-	}
 	cv::Mat_<cv::Vec3f>	color_mat;
 	gray_to_color(mhn,color_mat);
 	vmhn.push_back(color_mat.clone());

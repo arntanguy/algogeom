@@ -1,6 +1,6 @@
 #include "scene.h"
 #include "Ply.hpp"
-#include<fstream>
+#include <fstream>
 using namespace std;
 using I::misc::Ply;
 
@@ -411,4 +411,237 @@ void Scene::compute_gauss2(std::vector<std::size_t>& north_hemisphere,
 			north_hemisphere_idx[*++it_vcase].push_back(cpt);
 		}
 	}
+}
+   
+void Scene::normalize_gauss(const std::vector<std::size_t> &hn, const std::vector<std::size_t>& hs, cv::Mat_<float>& mhn, cv::Mat_<float>& mhs)
+{
+	auto it_vhn = hn.begin();
+	auto it_vhs = hs.begin();
+	std::size_t max(0);
+	for(auto vend = hn.end();it_vhn!=vend;++it_vhn,++it_vhs)
+	{
+		if(*it_vhn>max)
+			max=*it_vhn;
+		if(*it_vhs>max)
+			max=*it_vhs;
+	}
+	it_vhn = hn.begin();
+	it_vhs = hs.begin();
+	double inv_max = 1.0/max;
+	for(auto ithn = mhn.begin(),iths=mhs.begin(),end=mhn.end();ithn!=end;
+			++ithn,++iths,++it_vhn,++it_vhs)
+	{
+		*ithn = *it_vhn * inv_max;
+		*iths = *it_vhs * inv_max;
+	}
+}
+
+cv::Rect Scene::compute_bounding_box(const std::vector<cv::Point> &contour)
+{
+    assert(contour.size() > 0);
+    int minx=contour[0].x, maxx = contour[0].x, miny = contour[0].y, maxy = contour[0].y;
+    for(auto& p : contour) {
+        minx = std::min(minx, p.x);
+        maxx = std::max(maxx, p.x);
+        miny = std::min(miny, p.y);
+        maxy = std::max(maxy, p.y);
+    } 
+    return cv::Rect(minx, miny, maxx-minx+1, maxy-miny+1);
+}
+
+void fillRect(const cv::Mat& binary_mask, cv::Mat_<float>& mat, const cv::Rect& rect) {
+    if(rect.width > 0 && rect.height > 0) {
+        for(int x=rect.x; x<=rect.x+rect.width; x++) {
+            for(int y=rect.y; y<=rect.y+ rect.height; y++) {
+                if(binary_mask.at<uchar>(x, y) != 0)
+                    mat.at<float>(x, y) = 0.f;
+            }
+        }
+    }
+}
+
+void fillRect(cv::Mat_<float>& mat, const cv::Rect& rect) {
+    for(int x=rect.x; x<rect.x+rect.width; x++) {
+        for(int y=rect.y; y<rect.y+ rect.height; y++) {
+            mat.at<float>(x, y) = 0.f;
+        }
+    }
+}
+
+void normal_from_blob(const cv::Mat_<float>& gauss, const cv::Mat& thresholded_bin, const cv::Rect& bounding_box, int& normal, float& max)
+{
+    const cv::Mat& g = gauss(bounding_box);
+    const cv::Mat& b = thresholded_bin(bounding_box);
+    float m;
+    cv::Point mpoint;
+    for(int x=0; x<g.rows; x++) {
+        for(int y=0; y<g.cols; y++) {
+            if(b.at<uchar>(x,y) != 0) {
+                m = std::max(m, g.at<float>(x,y));
+                mpoint.x = x; mpoint.y = y;
+            }
+        }
+    }
+    cv::Point normal_pos = bounding_box.tl() + mpoint;
+    normal = normal_pos.y * gauss.cols + normal_pos.x;
+    max = m;
+}
+
+cv::Rect create_rect(int x, int y, int width, int height, int max_x, int max_y)
+{
+    cv::Rect r;
+    r.x = (x<0) ? 0 : x;
+    r.y = (y<0) ? 0 : y;
+    r.width = (r.x + width > max_x) ? max_x-r.x : width;
+    r.height = (r.y + height > max_y) ? max_y-r.y : height;
+    return r;
+}
+
+void Scene::normals_from_gauss(const cv::Mat_<float>& gauss_north, const cv::Mat_<float>& gauss_south, std::vector<std::size_t>& found_normals, std::vector<std::vector<std::size_t>> found_normals_clusters, const float& threshold)
+{
+    found_normals.clear();
+    found_normals_clusters.clear();
+
+    cv::Mat_<float> ghn = gauss_north.clone();
+    cv::Mat_<float> ghs = gauss_south.clone();
+    cv::Mat result(cv::Size(gauss_north.rows, gauss_north.cols), CV_32FC3); 
+
+    int found = 0;
+    while (found++ < 5) {
+        auto max_it = std::max_element(std::begin(ghn), std::end(ghn));
+        auto index = std::distance(begin(ghn), max_it);
+        cv::Point pos(index/ghn.cols, index%ghn.rows);
+
+        //XXX compute real bounding box
+        const int localsize = 10;
+        cv::Rect bbox = create_rect(pos.x-localsize/2, pos.y-localsize/2, localsize, localsize, ghn.cols, ghn.rows);
+
+        found_normals.push_back(index);
+        found_normals_clusters.push_back({ index });
+
+        cv::rectangle(result, bbox, cv::Scalar(0., 255. , 0.));
+        fillRect(ghn, bbox);
+    }
+
+    cv::namedWindow("result");
+    cv::imshow("result", result);
+}
+
+//void Scene::normals_from_gauss(const cv::Mat_<float>& gauss_north, const cv::Mat_<float>& gauss_south, std::set<std::size_t>& found_normals, std::vector<std::list<std::size_t>> found_normals_clusters, const float& threshold)
+//{
+//    found_normals.clear();
+//    found_normals_clusters.clear();
+//    cv::Mat_<float> ghn = gauss_north.clone();
+//    cv::Mat_<float> ghs = gauss_south.clone();
+//    cv::Mat result(cv::Size(gauss_north.rows, gauss_north.cols), CV_32FC3); 
+//
+//    cout << "Computing best normals from gauss, with threshold " << threshold << endl;
+//    vector<vector<cv::Point> > contours;
+//    vector<cv::Vec4i> hierarchy;
+//    int nb_found=0;
+//    int nb_iter=0;
+//    while(nb_found < 5 && nb_iter++ < 10) {
+//        contours.clear();
+//        hierarchy.clear();
+//
+//        cv::Mat thn(cv::Size(gauss_north.rows, gauss_north.cols), CV_8UC1);
+//        cv::Mat ths(cv::Size(gauss_south.rows, gauss_south.cols), CV_8UC1);
+//        //threshold_gauss(gauss_north, thn, threshold, 10);
+//        //threshold_gauss(ghn, thn, threshold);
+//
+//        cv::Mat t;
+//        ghn.clone().convertTo(t, CV_8UC1, 255);
+//        cv::namedWindow("converted");
+//        cv::imshow("converted", t);
+//        int seuil = cv::threshold(t, thn, threshold*255, 255, cv::THRESH_BINARY | cv::THRESH_OTSU);
+//        //int seuil = cv::threshold(t, thn, 0.1*255, 255, cv::THRESH_BINARY);
+//        cout << "seuil: " << seuil << endl;
+//        cv::imshow("thresholded north", thn);
+//
+//        // Find connex components
+//        cv::findContours(thn.clone(), contours, hierarchy, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_NONE);
+//
+//        cout << "Found " << contours.size() << " components" << endl;
+//        if(contours.size() == 0) break; 
+//
+//        float max = 0;
+//        int normal = 0;
+//        cv::Rect max_blob_bbox;
+//        int n = 0;
+//        float m = 0;
+//        for(auto& contour: contours) {
+//            cv::Rect blob_bounding_box = compute_bounding_box(contour);
+//            // Work on original image
+//            normal_from_blob(gauss_north, thn, blob_bounding_box, normal, max);
+//            cout << "Normal: " << normal << " with max: " << max << endl;
+//            if(m > max) {
+//                max = m;
+//                normal = n;
+//                max_blob_bbox = blob_bounding_box;
+//            }
+//        }
+//
+//        fillRect(thn, ghn, max_blob_bbox);
+//        cv::rectangle(result, max_blob_bbox, cv::Scalar(255., 0. , 0.));
+//
+//        cv::normalize(ghn.clone(), ghn, 0, 255, cv::NORM_MINMAX, ghn.type());
+//        
+//        cout << "Inserting normal " << normal << endl;
+//        found_normals.insert(normal);
+//        cv::namedWindow("ghn");
+//        cv::imshow("ghn", ghn);
+//        nb_found = found_normals.size();
+//
+//    }
+//    cout << "Found " << found_normals.size() << " normals" << endl;
+//    for(auto& n:found_normals) {
+//        std::cout << n << "\t";
+//        cv::Rect bbox(n - n/gauss_north.cols, n%gauss_north.rows, 3, 3);
+//        cv::rectangle(result, bbox, cv::Scalar(0., 255. , 0.));
+//    }
+//    cv::namedWindow("result");
+//    cv::imshow("result", result);
+//}
+
+
+/**
+ * If mean of surrounding area > threshold, value=1, discard otherwise
+ * Returns a mask for each area of interest
+ **/
+void Scene::threshold_gauss(const cv::Mat_<float>& src, cv::Mat& dst, const float& threshold, const int& localsize)
+{
+    int halfsize = localsize/2;
+    int minr, maxr, minc, maxc;
+    for(int r=0; r<src.rows; r++) {
+        for(int c=0; c<src.cols; c++)   {
+            minr = (r-halfsize<0) ? 0 : r-halfsize;
+            minc = (c-halfsize<0) ? 0 : c-halfsize;
+            maxr = (r+halfsize>src.rows) ? src.rows : r+halfsize;
+            maxc = (c+halfsize>src.cols) ? src.cols : c+halfsize;
+            float val = 0;
+            for(int lr = minr; lr <= maxr; lr++) {
+                for(int lc = minc; lc <= maxc; lc++) {
+                    val += src.at<float>(lr, lc);
+                }
+            }
+            val = val / ((maxr-minr)*(maxc-minc));
+            if(val > threshold)
+                dst.at<uchar>(r,c) = 255; //src.at<float>(r,c);
+            else
+                dst.at<uchar>(r,c) = 0; 
+        }
+    }
+}
+
+void Scene::threshold_gauss(const cv::Mat_<float>& src, cv::Mat& dst, const float& threshold)
+{
+    for(int r=0; r<src.rows; r++) {
+        for(int c=0; c<src.cols; c++)   {
+            auto val = src.at<float>(r, c); 
+            if(val > threshold)
+                dst.at<uchar>(r,c) = 255; //src.at<float>(r,c);
+            else
+                dst.at<uchar>(r,c) = 0; 
+        }
+    }
 }

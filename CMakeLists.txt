@@ -29,7 +29,7 @@ find_package(OpenGL)
 find_package(GLEW)
 
 find_package(OpenCL REQUIRED)
-find_package(OpenCV REQUIRED COMPONENTS core ml features2d highgui nonfree)
+find_package(OpenCV REQUIRED) # COMPONENTS core ml features2d highgui nonfree)
 
 #message( STATUS "********CXXflags: " ${CMAKE_CXX_FLAGS} )
 include(${CGAL_USE_FILE})#change CXX flags
@@ -111,7 +111,7 @@ if( CGAL_FOUND AND QT4_FOUND AND OPENGL_FOUND )
     target_link_libraries( ${PROJECT_NAME} ${OPENGL_LIBRARY} ${GLUT_LIBRARY}  ${GLEW_LIBRARY} )
 
     # Link with CGAL
-    target_link_libraries( ${PROJECT_NAME} ${CGAL_LIBRARIES} ${CGAL_3RD_PARTY_LIBRARIES})
+    target_link_libraries( ${PROJECT_NAME} ${CGAL_LIBRARIES} ${CGAL_3RD_PARTY_LIBRARIES} ${OPENCV_LIBRARIES})
     target_link_libraries( test_scene ${CGAL_LIBRARIES} ${CGAL_3RD_PARTY_LIBRARIES})
 
 	#Link with opencv
