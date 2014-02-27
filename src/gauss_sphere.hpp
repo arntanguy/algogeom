@@ -16,15 +16,20 @@ class GaussSphere
         cl::Buffer mSouthHemisphereBuf;
         int mResolution;
 
-    public:
-        GaussSphere(cl::Context& context, cl::CommandQueue& command_queue)
-            : mContext(context), mCommandQueue(command_queue)
-        { }
+        float mAlpha;
+        float mBeta;
 
-        void setupBuffers(const std::vector<float>& normals, int w, int h)
+    public:
+        GaussSphere(cl::Context& context, cl::CommandQueue& command_queue, const float alpha=1.f, const float beta=90.f)
+            : mContext(context), mCommandQueue(command_queue), mAlpha(alpha), mBeta(beta)
+        { 
+            mResolution = pow(2*(1+ceil(mBeta/mAlpha))+1, 2);  
+            std::cout << "mResolution: " << mResolution << std::endl;
+        }
+
+        void setupBuffers(const std::vector<float>& normals)
         {
             mNumNormals = normals.size();
-            mResolution = w * h;
             mNormalsBufSize = sizeof(float) * mNumNormals;
             std::cout<< "Creating buffer with  " << mNumNormals << " normals and " << mResolution << " pixels" << "sizeof: " << sizeof(float) << std::endl;
 
@@ -57,20 +62,13 @@ class GaussSphere
             mCommandQueue.enqueueReadBuffer(mSouthHemisphereBuf, CL_TRUE, 0, sizeof(cl_int) * mResolution, output.data());
         }
 
-        void readNormals(std::vector<glm::vec4>& output)
-        {
-            std::cout << "readNormals" << std::endl;
-            output.clear();
-            output.resize(mNumNormals);
-            mCommandQueue.enqueueReadBuffer(mNormalsBuf, CL_TRUE, 0, sizeof(glm::vec4) * mNumNormals, output.data());
-            mCommandQueue.finish();
-        }
-
         void runKernel(cl::Kernel& kernel)
         {
                 kernel.setArg(0, mNormalsBuf );
                 kernel.setArg(1, mNorthHemisphereBuf);
                 kernel.setArg(2, mSouthHemisphereBuf);
+                kernel.setArg(3, mAlpha);
+                kernel.setArg(4, mBeta);
 
                 int global = mNumNormals/4;
 

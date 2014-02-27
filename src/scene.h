@@ -7,6 +7,7 @@
 #include <list>
 #include <string>
 #include<vector>
+#include <set>
 #include<algorithm>
 
 
@@ -29,6 +30,11 @@ typedef CGAL::Triangulation_data_structure_3<Vertex_base> Tds;
 typedef CGAL::Delaunay_triangulation_3<Kernel, Tds> Delaunay;
 
 
+#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/features2d/features2d.hpp>
+#include <opencv2/nonfree/nonfree.hpp>
+#include <opencv2/ml/ml.hpp>
 
 
 class Scene
@@ -87,6 +93,12 @@ public:
 						  const double& alpha);
 //void get_distribution_plan(const std::size_t& normal_idx, const std::vector<std::size_t>& vidx, const std::vector<std::vector<std::size_t>>& north, std::vector<std::size_t>& normal_dist, const std::size_t& nb_bins, const std::size_t& nb_min_dot_per_bin);
 void get_distribution_plan(const std::vector<std::size_t>& v_normal_idx, const std::vector<std::vector<std::size_t>>& v_vidx, const std::vector<std::vector<std::size_t>>& north, std::vector<std::size_t>& normal_dist, const std::size_t& nb_bins, const std::size_t& nb_min_dot_per_bin);
+    void normalize_gauss(const std::vector<std::size_t> &hn, const std::vector<std::size_t>& hs, cv::Mat_<float>& mhn, cv::Mat_<float>& mhs);
+    void normals_from_gauss(const cv::Mat_<float>& gauss_north, const cv::Mat_<float>& gauss_south, std::vector<std::size_t>& found_normals, std::vector<std::vector<std::size_t>> found_normals_clusters, const float& threshold);
+    void threshold_gauss(const cv::Mat_<float>& src, cv::Mat& dst, const float& threshold);
+    void threshold_gauss(const cv::Mat_<float>& src, cv::Mat& dst, const float& threshold, const int& localsize);
+    cv::Rect compute_bounding_box(const std::vector<cv::Point> &contour);
+
     //void loadPLYcertis(const std::string& );
     void compute_delaunay()
     {
