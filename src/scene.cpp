@@ -617,11 +617,11 @@ void Scene::get_distribution_plan(const std::vector<std::size_t>& v_normal_idx, 
 				correspondance[i]=j++;
 			}
 		}
-		std::vector<std::array<float, 4>> dist(correspondance.size(),{std::numeric_limits<float>::max(),
-																	  std::numeric_limits<float>::min(),
-																	  std::numeric_limits<float>::max(),
-																	  std::numeric_limits<float>::min()});
-		
+		std::vector<std::array<float, 4>> dist(correspondance.size(),
+				{std::numeric_limits<float>::max(),
+				std::numeric_limits<float>::min(),
+				std::numeric_limits<float>::max(),
+				std::numeric_limits<float>::min()});
 		
 		std::remove_const<std::remove_reference<decltype(normal)>::type>::type vect_tmp(normal.y(),-normal.x(),0);
 		const auto nu = vect_tmp*(1./sqrt(vect_tmp.squared_length()));
@@ -866,7 +866,7 @@ cv::Rect create_rect(int x, int y, int width, int height, int max_x, int max_y)
     return r;
 }
 
-void Scene::normals_from_gauss(const cv::Mat_<float>& gauss_north, const cv::Mat_<float>& gauss_south, std::vector<std::size_t>& found_normals, std::vector<std::vector<std::size_t>> found_normals_clusters, const float& threshold)
+void Scene::normals_from_gauss(const cv::Mat_<float>& gauss_north, const cv::Mat_<float>& gauss_south, std::vector<std::size_t>& found_normals, std::vector<std::vector<std::size_t>>& found_normals_clusters, const float& threshold)
 {
     found_normals.clear();
     found_normals_clusters.clear();
