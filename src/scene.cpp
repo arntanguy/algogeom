@@ -49,11 +49,29 @@ bool Scene::loadPLY(const std::string& path)
 			continue;
 		}
 		size_t num_vertices = element.count();
-		points_temp.resize(num_vertices);
-		color_temp.resize(num_vertices);
-		camera_index.resize(num_vertices);
-		if (element.num_properties()>6)
+		if(element.num_properties()==3)
 		{
+			points_temp.resize(num_vertices);
+			for (size_t i=0; i<num_vertices; i++)
+			{
+				double x,y,z;
+				if((!ply.read(element.property(0), x))
+				 ||(!ply.read(element.property(1), y))
+				 ||(!ply.read(element.property(2), z)))
+				{
+					cerr << "error while reading (pos) vertex " 
+						<< i+1 << endl;
+					ply.close();
+					return false;
+				}
+				points_temp[i] = Point_d(x,y,z);
+			}
+		}
+		else if (element.num_properties()>6)
+		{
+			points_temp.resize(num_vertices);
+			color_temp.resize(num_vertices);
+			camera_index.resize(num_vertices);
 			for (size_t i=0; i<num_vertices; i++)
 			{
 				double x,y,z,r,g,b;
@@ -96,12 +114,24 @@ bool Scene::loadPLY(const std::string& path)
 	vhpoint.reserve(points_temp.size());
 	vpoint_indice.reserve(points_temp.size());
 	vcolor_point.reserve(points_temp.size());
-	for(int i=0;i<points_temp.size();i++)
+	if(camera_index.size()&&vcolor_point.size())
 	{
-		vhpoint.push_back(HPoint(points_temp[i],camera_index[i]));
-		vpoint_indice.push_back({points_temp[i],i});
-		vcolor_point.push_back(color_temp[i]);
-//		if(is_normal_given) normal.push_back(normals_temp[i]);
+		for(int i=0;i<points_temp.size();i++)
+		{
+			vhpoint.push_back(HPoint(points_temp[i],camera_index[i]));
+			vpoint_indice.push_back({points_temp[i],i});
+			vcolor_point.push_back(color_temp[i]);
+	//		if(is_normal_given) normal.push_back(normals_temp[i]);
+		}
+	}
+	else
+	{
+		for(int i=0;i<points_temp.size();i++)
+		{
+			vhpoint.push_back(HPoint(points_temp[i],0));
+			vpoint_indice.push_back({points_temp[i],i});
+//			if(is_normal_given) normal.push_back(normals_temp[i]);
+		}
 	}
 //		if(label_plane.size()>0) IS_PC_CLUSTERED=true;
 //		else IS_PC_CLUSTERED=false;
@@ -233,8 +263,16 @@ void Scene::compute_normal()
 		//         \                     |
 		//le produit scalaire de la normal avec le vectrue point/cam doit etre positif
 		//si negatif, alors *=-1
-			if(normal_temp*(cam[vhpoint[k].camera_index]-vhpoint[k].position)<0)
-				normal_temp = normal_temp*-1;
+			if(cam.size()!=0)
+			{
+				if(normal_temp*(cam[vhpoint[k].camera_index]-vhpoint[k].position)<0)
+					normal_temp = normal_temp*-1;
+			}
+			else
+			{
+				if(normal_temp*Vector_3(0,0,1)<0)
+					normal_temp = normal_temp*-1;
+			}
 			vhpoint[k].normal = normal_temp;
 		}
 
@@ -342,8 +380,7 @@ void Scene::compute_gauss(std::vector<std::size_t>& north_hemisphere,
 	    	//imageAtomicAdd(north_hemisphere, floor((beta+1f)/(1f+normal.z)*normal.xy),1u);
     	}
 	}
-}
-void Scene::compute_gauss2(std::vector<std::size_t>& north_hemisphere,
+}void Scene::compute_gauss2(std::vector<std::size_t>& north_hemisphere,
 						  std::vector<std::size_t>& south_hemisphere,
 						  std::vector<std::vector<std::size_t>>& north_hemisphere_idx,
 						  std::vector<std::vector<std::size_t>>& south_hemisphere_idx,
@@ -387,7 +424,8 @@ void Scene::compute_gauss2(std::vector<std::size_t>& north_hemisphere,
 			is_south.push_back(false);
     	}
 	}
-
+	north_hemisphere_idx.clear();
+	south_hemisphere_idx.clear();
 	//add a ref to the normal
 	north_hemisphere_idx.resize(north_hemisphere.size());
 	south_hemisphere_idx.resize(south_hemisphere.size());
@@ -398,17 +436,348 @@ void Scene::compute_gauss2(std::vector<std::size_t>& north_hemisphere,
 	}
 
 	std::size_t cpt=0;
-	auto it_is_south = is_south.begin()-1;
-	auto it_vcase = vcase.begin()-1;
+	auto it_is_south = is_south.begin();
+	auto it_vcase = vcase.begin();
 	for(const std::size_t end=vcase.size(); cpt<end;++cpt)
 	{
-		if(*++it_is_south)
+		if(*it_is_south)
 		{
-			south_hemisphere_idx[*++it_vcase].push_back(cpt);
+			south_hemisphere_idx[*it_vcase].push_back(cpt);
 		}
 		else
 		{
-			north_hemisphere_idx[*++it_vcase].push_back(cpt);
+			north_hemisphere_idx[*it_vcase].push_back(cpt);
+//		if(cpt==266979&&beta==180&&alpha==1)
+//		{
+//			std::cout << "aaaaaaa " << *it_is_south<<' ' <<*it_vcase << ' ' << rowrow_s_2<< ' ' << vhpoint[cpt].normal.z()<<' '<<vhpoint[*north_hemisphere_idx[*it_vcase].rbegin()].normal.z()<<std::endl;
+//			std::cout << cpt << ' ' << *north_hemisphere_idx[*it_vcase].rbegin()<<std::endl<<std::endl;
+//		}
+//			if(*it_vcase==rowrow_s_2)
+//			{
+//				std::cout << vhpoint[cpt].normal.x() << ' '
+//				<< vhpoint[cpt].normal.y() << ' '
+//				<< vhpoint[cpt].normal.z() << std::endl;
+//
+//				if(!(vhpoint[cpt].normal.z()>.7))
+//				{
+//					std::cout << "azertyuiopqsdfghjklm"<<std::endl;
+//					exit(0);
+//				}
+//			}
 		}
+
+		++it_is_south;
+		++it_vcase;
+	}
+	std::cout << "cpt_max " << cpt<<std::endl;
+}
+void Scene::compute_gauss3(std::vector<std::size_t>& north_hemisphere,
+						  std::vector<std::vector<std::size_t>>& north_hemisphere_idx,
+						  const std::vector<float>& normal,
+						  const std::size_t& rows,
+						  const std::size_t& cols,
+						  const double& beta,
+						  const double& alpha)
+{
+		north_hemisphere.clear();
+		north_hemisphere.resize(pow(rows,2),0);
+
+		std::vector<std::size_t> vcase;
+		vcase.reserve(normal.size()/3);
+	double tmp;
+	std::size_t case_tmp;
+	//compute the gauss sphere
+	const std::size_t rowrow_s_2 = rows*rows/2;
+	const double alphabeta = alpha+beta;
+	for(auto begin = normal.begin(),end=normal.end();begin!=end;++begin)
+	{
+		const float& x = *begin;
+		const float& y = *++begin;
+		const float& z = *++begin;
+		if(z<0)
+		{
+			tmp = alphabeta/(alpha-z);
+			case_tmp = rows*floor(tmp*-y)+rowrow_s_2+floor(tmp*-x);
+    	} else {
+			tmp = alphabeta/(alpha+z);
+			case_tmp = rows*floor(tmp*y)+rowrow_s_2+floor(tmp*x);
+    	}
+		north_hemisphere[case_tmp]++;
+		vcase.push_back(case_tmp);
+	}
+	north_hemisphere_idx.clear();
+	//add a ref to the normal
+	north_hemisphere_idx.resize(north_hemisphere.size());
+	for(int i=0; i<north_hemisphere.size(); ++i)
+	{
+		north_hemisphere_idx[i].reserve(north_hemisphere[i]);
+	}
+
+	std::size_t cpt=0;
+	auto it_vcase = vcase.begin();
+	for(const std::size_t end=vcase.size(); cpt<end;++cpt)
+	{
+		north_hemisphere_idx[*it_vcase].push_back(cpt);
+		++it_vcase;
+	}
+}
+void Scene::get_distribution_plan(const std::vector<std::size_t>& v_normal_idx, const std::vector<std::vector<std::size_t>>& v_vidx, const std::vector<std::vector<std::size_t>>& north, std::vector<std::size_t>& normal_dist, const std::size_t& nb_bins, const std::size_t& nb_min_dot_per_bin)
+{
+	std::ostringstream oss;
+	std::ofstream ofs;
+	double tmp;
+	double max;
+	double min;
+	for(std::size_t indice_normal = 0,indice_normal_end=v_normal_idx.size();indice_normal!=indice_normal_end;++indice_normal)
+	{
+		const auto& normal_idx = v_normal_idx[indice_normal];
+		const auto& vidx = v_vidx[indice_normal];
+	
+		max=std::numeric_limits<decltype(max)>::min();
+		min=std::numeric_limits<decltype(min)>::max();
+		if(north[normal_idx].size()==0)
+		{
+			std::cout << "bad normal_idx" << std::endl;
+			exit(0);
+		}
+		const auto& normal = vhpoint[north[normal_idx][0]].normal;
+		std::cout << normal.x() << " " << normal.y() << ' ' << normal.z()<<std::endl;
+		for(const auto&	idx : vidx)
+		{
+			for(const auto& p_idx : north[idx])
+			{
+				//tmp = normal * (vhpoint[p_idx].position - CGAL::ORIGIN);
+				tmp = normal * (vhpoint[p_idx].position - Point_d(0,0,0));
+	//			std::cout<<vhpoint[p_idx].position.z()<<std::endl;
+				if(tmp<min)
+					min=tmp;
+				if(tmp>max)
+					max=tmp;
+			}
+		}
+		normal_dist.clear();
+		normal_dist.resize(nb_bins,0);
+	//	max+=std::numeric_limits<decltype(max)>::epsilon();//to open the interval
+		const double ratio = (nb_bins-1)*1./(max-min);
+		//return;
+		for(const auto&	idx : vidx)
+		{
+			for(const auto& p_idx : north[idx])
+			{
+	//			std::cout <<floor((normal * (vhpoint[p_idx].position - CGAL::ORIGIN)-min)*ratio)<<std::endl;;
+				//normal_dist[floor((normal * (vhpoint[p_idx].position - CGAL::ORIGIN)-min)*ratio)]++;
+				normal_dist[floor((normal * (vhpoint[p_idx].position - Point_d(0,0,0))-min)*ratio)]++;
+			}
+		}
+	//	for(auto& a : normal_dist)
+	//	{
+	//		if(a<nb_min_dot_per_bin)
+	//			a=0;
+	//	}
+	//	//XXX
+		
+	//	return;
+	
+	//#define mon_transform(src,dst,lambda) std::transform(src.begin(), src.end(), dst.begin(), lambda);
+		std::cout << min << ' ' << max << std::endl;
+		std::vector<float> normalized_histo(normal_dist.size());
+		double ratio_hist = 1./ *std::max_element(normal_dist.begin(), normal_dist.end());
+		std::vector<float> normal_max(normal_dist.size());
+		double seuil = .1;
+		//normalize the histogram
+		std::transform(normal_dist.begin(), normal_dist.end(), normalized_histo.begin(), [&ratio_hist](decltype(*normal_dist.begin()) val){return val*ratio_hist;});
+		//seuil it
+		std::transform(normalized_histo.begin(),normalized_histo.end(), normal_max.begin(), [&seuil](decltype(*normalized_histo.begin()) val){return val<seuil ? 0 : val;});
+		//get the max value of all the blob
+	//	std::replace_if(normal_max.begin(), normal_max.end(), 
+		auto previews_value = normal_max.begin();
+		for(auto it = normal_max.begin(),end=normal_max.end(); it!=end; ++it)
+		{
+			if(*it==0)
+			{
+				previews_value = it;
+				continue;
+			}
+			if(*it>*previews_value)
+			{
+				*previews_value = 0;
+				previews_value=it;
+			}
+			else
+			{
+				*it=0;
+			}
+		}
+	
+		std::map<std::size_t,std::size_t> correspondance;
+		for(std::size_t i=0,j=0,end=normal_max.size(); i!=end;++i)
+		{
+			if(normal_max[i])
+			{
+				correspondance[i]=j++;
+			}
+		}
+		std::vector<std::array<float, 4>> dist(correspondance.size(),{std::numeric_limits<float>::max(),
+																	  std::numeric_limits<float>::min(),
+																	  std::numeric_limits<float>::max(),
+																	  std::numeric_limits<float>::min()});
+		
+		
+		std::remove_const<std::remove_reference<decltype(normal)>::type>::type vect_tmp(normal.y(),-normal.x(),0);
+		const auto nu = vect_tmp*(1./sqrt(vect_tmp.squared_length()));
+	//	assert(nu.squared_length()==1);
+		vect_tmp = CGAL::cross_product(normal,nu);
+		const auto eta = vect_tmp*(1./sqrt(vect_tmp.squared_length()));
+	//	assert(eta.squared_length()==1);
+		//(normal,nu,eta) = repere on the plan
+		std::cout << "||nu|| = " << nu.squared_length() << std::endl;
+		std::cout << "||eta|| = " << eta.squared_length() << std::endl;
+		std::cout << "||normal|| = " << normal.squared_length() << std::endl;
+		for(const auto&	idx : vidx)
+		{
+			for(const auto& p_idx : north[idx])
+			{
+				const auto& pos = vhpoint[p_idx].position;
+				const auto vpos = pos - Point_d(0,0,0);
+				std::size_t i = floor(((normal * vpos)-min)*ratio);
+				if(normal_max[i]!=0)
+				{
+					auto& array =  dist[correspondance[i]];
+					auto& eta_min = array[0];
+					auto& eta_max = array[1];
+					auto& nu_min = array[2];
+					auto& nu_max = array[3];
+					const auto eta_val = eta * vpos; 
+					const auto nu_val  = nu  * vpos; 
+					if(eta_val>eta_max)
+					{
+						eta_max=eta_val;
+					}
+					if(eta_val<eta_min)
+					{
+						eta_min=eta_val;
+					}
+					if(nu_val>nu_max)
+					{
+						nu_max=nu_val;
+	//					std::cout << nu_max << ' ' << vpos.squared_length() << ' ' << nu.squared_length()<<std::endl;
+					}
+					if(nu_val<nu_min)
+					{
+						nu_min=nu_val;
+					}
+				}
+			}
+		}
+		std::vector<float> normal_val(dist.size());
+		for(const auto& a : correspondance)
+		{
+			normal_val[a.second] = a.first/ratio+min;
+		}
+		std::vector<std::array<std::remove_const<decltype(eta)>::type,4>> plan;
+		plan.reserve(normal_val.size());
+		for(std::size_t i=0; i<normal_val.size(); ++i)
+		{
+			auto& p = plan[i];
+			const auto& etanu = dist[i];
+			const auto& nval = normal_val[i];
+			std::cout << etanu[0] << ' ' << etanu[1] << ' ' << etanu[2] << ' ' << etanu[3] << std::endl;
+			plan.push_back({
+			normal * nval + eta * etanu[0] + nu * etanu[2],
+			normal * nval + eta * etanu[0] + nu * etanu[3],
+			normal * nval + eta * etanu[1] + nu * etanu[3],
+			normal * nval + eta * etanu[1] + nu * etanu[2]});
+		}
+		oss.str("");
+		oss << "test_plan_" << indice_normal << ".off";
+		ofs.open(oss.str().c_str());
+//		ofs.open("test_plan.off");
+		ofs << "OFF" << std::endl << plan.size()*4 << ' ' << plan.size() << ' ' << 0 << std::endl;
+		for(const auto& a : plan)
+		{
+			for(const auto& b : a)
+			{
+				ofs << b.x() << ' ' << b.y() << ' ' << b.z() << std::endl;
+			}
+		}
+		for(int i=0,end=plan.size()*4;i!=end;i+=4)
+		{
+			ofs << 4 << ' ' << i << ' ' << i+1 << ' ' << i+2 << ' ' << i+3 << ' '  << fabs(normal.x()) << ' ' << fabs(normal.y()) << ' ' << fabs(normal.z())<<std::endl;//àno color
+		}
+		ofs.close();
+	//	for(const auto& a:  normal_max)
+	//	{
+	//		if(a!=0)
+	//		{
+	//			for(const auto&	idx : vidx)
+	//			{
+	//				for(const auto& p_idx : north[idx])
+	//				{
+	//					if(i == floor((normal * (vhpoint[p_idx].position - Point_d(0,0,0))-min)*ratio))
+	//					{
+	//
+	//					}
+	//				}
+	//			}
+	//		}
+	//		++i;
+	//	}
+		
+		
+	
+	//	normal_max.reserve(normal_dist.size());
+	//	auto ptr_pred = normal_dist.begin();
+	//	auto ptr_curr = ptr_pred+1;
+	//	auto ptr_next = ptr_curr+1;
+	//	auto ptr_end = normal_dist.end();
+	//	normal_max.push_back((*ptr_pred*2+*ptr_curr)/3);
+	//	while(ptr_next!=ptr_end)
+	//	{
+	//		normal_max.push_back((*ptr_pred+2**ptr_curr+*ptr_next)/4);
+	//		++ptr_next;
+	//		++ptr_curr;
+	//		++ptr_pred;
+	//	}
+	//	normal_max.push_back((*ptr_pred+*ptr_curr*2)/3);
+	//	std::size_t previews_val(0);
+	//	for(auto& a : normal_max)
+	//	{
+	//		if(previews_val>a)
+	//		{
+	//			previews_val=a;
+	//			a=0;
+	//		}
+	//		else
+	//		{
+	//			previews_val=a;
+	//		}
+	//	}
+		//
+		//
+	//	std::ofstream ofs;
+		oss.str("");
+		oss << "normal_dist_" << indice_normal << ".csv";
+		ofs.open(oss.str().c_str());
+		std::size_t i = 0, j = 0;
+	//	for(const auto& a : normal_dist)
+		for(const auto& a : normalized_histo)
+		{
+			while(normal_max[j]==0&&j<normal_max.size())
+			{
+				++j;
+			}
+			if(j<normal_max.size())
+			{
+				ofs << (i*(max-min)/(nb_bins-1)+min) << ';' << a << ";"
+					<< (j*(max-min)/(nb_bins-1)+min) << ';' << normal_max[j]<<std::endl;
+				++j;
+			}
+			else
+			{
+				ofs << (i*(max-min)/(nb_bins-1)+min) << ';' << a << std::endl;
+			}
+			++i;
+		}
+		ofs.close();
 	}
 }

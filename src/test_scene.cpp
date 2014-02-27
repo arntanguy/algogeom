@@ -40,19 +40,28 @@ int main(int argc, char** argv)
 	std::vector<std::string> ply = {
 		"../build/mougin.ply",
 		"../build/appartment.ply",
-		"../build/khan.ply"
+		"../build/khan.ply",
+		"../data/Espresso.ply",
+		"../data/saint-jean.ply",
+		"../data/eglise-fontaine.ply"
 	};
 	std::vector<std::string> cam = {
 		"../data/laser/maison_Mougins/Mougins_scan_centers.txt",
 		"../data/laser/appartement/Appartment_scan_centers.txt",
-		"../data/laser/Kahn/Kahn_outside_scan_centers.txt"
+		"../data/laser/Kahn/Kahn_outside_scan_centers.txt",
+		"",
+		"",
+		""
 	};
 	char idx = (argc==1 ? 0 : argv[1][0] - '0');
 	Scene s;
 	s.loadPLY(ply[idx]);
 	s.load_cam(cam[idx]);
+	std::cout << "data loaded"<<std::endl;
 	s.compute_Knearest_neighbors(10);
+	std::cout << "nearest neihgbors computed"<<std::endl;
 	s.compute_normal();
+	std::cout << "normal computed"<<std::endl;
 	std::vector<float> normal;
 	s.get_all_normal(normal);
 //	std::cout << normal.size() << ' ' << (s.vhpoint.size()*3) << ' ' << s.vhpoint.size() <<std::endl;
@@ -180,4 +189,29 @@ int main(int argc, char** argv)
 			case 'q':i=vmhn.size();break;
 		}
 	}
+	rows = 2*ceil(((181)/1.))+1;
+//	s.compute_gauss(hn,hs,normal,rows,rows,180,1);
+	s.compute_gauss3(hn,hn2,normal,rows,rows,180,1);
+	std::vector<std::vector<std::size_t>> vidx = {{rows*rows/2,
+									rows*rows/2+1, rows*rows/2-1,
+									rows*rows/2+rows, rows*rows/2-rows}};
+	std::vector<std::size_t> normal_dist;
+	//std::cout << "rowrowss2 "<<floor(rows*rows/2)<<std::endl;	
+	//for(int i=0; i<10; ++i)
+	//{
+	//	std::cout << hn2[floor(rows*rows/2)][i] << std::endl;
+	//	const auto& nn = s.vhpoint[hn2[floor(rows*rows/2)][i]].normal;
+	//	std::cout << nn.x() << ' ' << nn.y() << ' ' << nn.z() << std::endl;
+	//}
+	std::cout <<"azertgfdeerefgfgdferefdfbvvdfze"<<std::endl;
+	s.get_distribution_plan({rows*rows/2},vidx,hn2,normal_dist,500,20);
+		
+	
+	//std::ofstream ofs;
+	//ofs.open("normal_dist.csv");
+	//for(const auto& a : normal_dist)
+	//{
+	//	ofs << a << std::endl;
+	//}
+	//ofs.close();
 }
