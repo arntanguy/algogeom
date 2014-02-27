@@ -143,7 +143,7 @@ int main(int argc, char** argv)
 	cv::Mat_<float> mhn(rows,rows);
 	cv::Mat_<float> mhs(rows,rows);
     s.normalize_gauss(hn, hs, mhn, mhs);
-    s.normals_from_gauss(mhn, mhs, found_normals, found_normals_clusters, threshold);
+//    s.normals_from_gauss(mhn, mhs, found_normals, found_normals_clusters, threshold);
 
 	cv::Mat_<cv::Vec3f>	color_mat;
 	gray_to_color(mhn,color_mat);
@@ -180,10 +180,15 @@ int main(int argc, char** argv)
 	rows = 2*ceil(((181)/1.))+1;
 //	s.compute_gauss(hn,hs,normal,rows,rows,180,1);
 	s.compute_gauss3(hn,hn2,normal,rows,rows,180,1);
+//	std::vector<std::vector<std::size_t>> vidx = {{rows*rows/2,
+//									rows*rows/2+1, rows*rows/2-1,
+//									rows*rows/2+rows, rows*rows/2-rows}};
+	std::vector<std::size_t> normal_dist;
+	//std::vector<std::size_t> vnormal={rows*rows/2};
+	std::vector<std::size_t> vnormal;
 	std::vector<std::vector<std::size_t>> vidx = {{rows*rows/2,
 									rows*rows/2+1, rows*rows/2-1,
 									rows*rows/2+rows, rows*rows/2-rows}};
-	std::vector<std::size_t> normal_dist;
 	//std::cout << "rowrowss2 "<<floor(rows*rows/2)<<std::endl;	
 	//for(int i=0; i<10; ++i)
 	//{
@@ -192,7 +197,11 @@ int main(int argc, char** argv)
 	//	std::cout << nn.x() << ' ' << nn.y() << ' ' << nn.z() << std::endl;
 	//}
 	std::cout <<"azertgfdeerefgfgdferefdfbvvdfze"<<std::endl;
-	s.get_distribution_plan({rows*rows/2},vidx,hn2,normal_dist,500,20);
+	cv::Mat_<float> mhn(rows,rows);
+	cv::Mat_<float> mhs(rows,rows);
+    s.normalize_gauss(hn, hs, mhn, mhs);
+	s.normals_from_gauss(mhn,mhs,vnormal,vidx,0);
+	s.get_distribution_plan(vnormal,vidx,hn2,normal_dist,500,20);
 		
 	
 	//std::ofstream ofs;
