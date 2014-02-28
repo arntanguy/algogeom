@@ -43,12 +43,14 @@ int main(int argc, char** argv)
 		"../build/khan.ply",
 		"../data/Espresso.ply",
 		"../data/saint-jean.ply",
-		"../data/eglise-fontaine.ply"
+		"../data/eglise-fontaine.ply",
+		"../data/mvs/P25/cloud.ply"
 	};
 	std::vector<std::string> cam = {
 		"../data/laser/maison_Mougins/Mougins_scan_centers.txt",
 		"../data/laser/appartement/Appartment_scan_centers.txt",
 		"../data/laser/Kahn/Kahn_outside_scan_centers.txt",
+		"",
 		"",
 		"",
 		""
@@ -177,9 +179,10 @@ int main(int argc, char** argv)
 			case 'q':i=vmhn.size();break;
 		}
 	}
-	rows = 2*ceil(((181)/1.))+1;
+	float beta2 = 180;
+	rows = 2*ceil(((beta2+1)/1.))+1;
 //	s.compute_gauss(hn,hs,normal,rows,rows,180,1);
-	s.compute_gauss3(hn,hn2,normal,rows,rows,180,1);
+	s.compute_gauss3(hn,hn2,normal,rows,rows,beta2,1);
 //	std::vector<std::vector<std::size_t>> vidx = {{rows*rows/2,
 //									rows*rows/2+1, rows*rows/2-1,
 //									rows*rows/2+rows, rows*rows/2-rows}};
@@ -199,10 +202,12 @@ int main(int argc, char** argv)
 	std::cout <<"azertgfdeerefgfgdferefdfbvvdfze"<<std::endl;
 	cv::Mat_<float> mhn(rows,rows);
 	cv::Mat_<float> mhs(rows,rows);
-    s.normalize_gauss(hn, hs, mhn, mhs);
+    s.normalize_gauss(hn, mhn);
 	s.normals_from_gauss(mhn,vnormal,vidx);
+	mhn.release();
+	mhs.release();
 	s.get_distribution_plan(vnormal,vidx,hn2,normal_dist,500,20);
-		
+	
 	
 	//std::ofstream ofs;
 	//ofs.open("normal_dist.csv");

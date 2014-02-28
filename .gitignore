@@ -15,6 +15,16 @@
 *.swp
 *.swo
 
+tex/*.toc
+tex/*.ps
+tex/*.log
+tex/*.aux
+tex/*.nav
+tex/*.out
+tex/*.pdf
+tex/*.snm
+tex/*.synctex.gz
+
 
 data/
 build/

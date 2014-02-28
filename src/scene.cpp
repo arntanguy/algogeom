@@ -111,6 +111,7 @@ bool Scene::loadPLY(const std::string& path)
 			return false;
 		}
 	}
+
 	vhpoint.reserve(points_temp.size());
 	vpoint_indice.reserve(points_temp.size());
 	vcolor_point.reserve(points_temp.size());
@@ -622,7 +623,8 @@ void Scene::get_distribution_plan(const std::vector<std::size_t>& v_normal_idx, 
 				std::numeric_limits<float>::min(),
 				std::numeric_limits<float>::max(),
 				std::numeric_limits<float>::min()});
-		
+		std::vector<std::array<std::remove_const<std::remove_reference<decltype(normal)>::type>::type,4>>
+			vdist(correspondance.size());	
 		std::remove_const<std::remove_reference<decltype(normal)>::type>::type vect_tmp(normal.y(),-normal.x(),0);
 		const auto nu = vect_tmp*(1./sqrt(vect_tmp.squared_length()));
 	//	assert(nu.squared_length()==1);
@@ -643,6 +645,7 @@ void Scene::get_distribution_plan(const std::vector<std::size_t>& v_normal_idx, 
 				if(normal_max[i]!=0)
 				{
 					auto& array =  dist[correspondance[i]];
+					auto& varray =  vdist[correspondance[i]];
 					auto& eta_min = array[0];
 					auto& eta_max = array[1];
 					auto& nu_min = array[2];
@@ -652,19 +655,23 @@ void Scene::get_distribution_plan(const std::vector<std::size_t>& v_normal_idx, 
 					if(eta_val>eta_max)
 					{
 						eta_max=eta_val;
+						varray[1]=vpos;
 					}
 					if(eta_val<eta_min)
 					{
 						eta_min=eta_val;
+						varray[0]=vpos;
 					}
 					if(nu_val>nu_max)
 					{
 						nu_max=nu_val;
+						varray[3]=vpos;
 	//					std::cout << nu_max << ' ' << vpos.squared_length() << ' ' << nu.squared_length()<<std::endl;
 					}
 					if(nu_val<nu_min)
 					{
 						nu_min=nu_val;
+						varray[2]=vpos;
 					}
 				}
 			}
@@ -682,6 +689,7 @@ void Scene::get_distribution_plan(const std::vector<std::size_t>& v_normal_idx, 
 			const auto& etanu = dist[i];
 			const auto& nval = normal_val[i];
 			std::cout << etanu[0] << ' ' << etanu[1] << ' ' << etanu[2] << ' ' << etanu[3] << std::endl;
+//			plan.push_back(vdist[i]);
 			plan.push_back({
 			normal * nval + eta * etanu[0] + nu * etanu[2],
 			normal * nval + eta * etanu[0] + nu * etanu[3],
@@ -762,9 +770,14 @@ void Scene::get_distribution_plan(const std::vector<std::size_t>& v_normal_idx, 
 	//	for(const auto& a : normal_dist)
 		for(const auto& a : normalized_histo)
 		{
-			while(normal_max[j]==0&&j<normal_max.size())
+			if(j<normal_max.size())
 			{
-				++j;
+				while(normal_max[j]==0)
+				{
+					++j;
+					if(j==normal_max.size())
+						break;
+				}
 			}
 			if(j<normal_max.size())
 			{
@@ -782,6 +795,25 @@ void Scene::get_distribution_plan(const std::vector<std::size_t>& v_normal_idx, 
 	}
 }
    
+void Scene::normalize_gauss(const std::vector<std::size_t> &hn, cv::Mat_<float>& mhn)
+{
+	auto it_vhn = hn.begin();
+	std::size_t max(0);
+	for(auto vend = hn.end();it_vhn!=vend;++it_vhn)
+	{
+		if(*it_vhn>max)
+			max=*it_vhn;
+	}
+	it_vhn = hn.begin();
+	double inv_max = 1.0/max;
+	for(auto ithn = mhn.begin(),end=mhn.end();ithn!=end;
+			++ithn,++it_vhn)
+	{
+		*ithn = *it_vhn * inv_max;
+	}
+}
+
+
 void Scene::normalize_gauss(const std::vector<std::size_t> &hn, const std::vector<std::size_t>& hs, cv::Mat_<float>& mhn, cv::Mat_<float>& mhs)
 {
 	auto it_vhn = hn.begin();
