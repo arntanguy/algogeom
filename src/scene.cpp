@@ -970,8 +970,8 @@ void Scene::normals_from_gauss(const cv::Mat_<float>& gauss_map, std::vector<std
 
     cv::namedWindow("result");
     cv::imshow("result", result);
-    cv::imwrite("result.png", result);
-    cv::waitKey();
+    //cv::imwrite("result.png", result);
+    while(cv::waitKey() != 'q');
 
     cout << "Mean value: " << mean << endl;
     cout << "Var value: " << var << endl;
