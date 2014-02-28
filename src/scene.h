@@ -94,6 +94,7 @@ public:
 //void get_distribution_plan(const std::size_t& normal_idx, const std::vector<std::size_t>& vidx, const std::vector<std::vector<std::size_t>>& north, std::vector<std::size_t>& normal_dist, const std::size_t& nb_bins, const std::size_t& nb_min_dot_per_bin);
 void get_distribution_plan(const std::vector<std::size_t>& v_normal_idx, const std::vector<std::vector<std::size_t>>& v_vidx, const std::vector<std::vector<std::size_t>>& north, std::vector<std::size_t>& normal_dist, const std::size_t& nb_bins, const std::size_t& nb_min_dot_per_bin);
     void normalize_gauss(const std::vector<std::size_t> &hn, const std::vector<std::size_t>& hs, cv::Mat_<float>& mhn, cv::Mat_<float>& mhs);
+void normalize_gauss(const std::vector<std::size_t> &hn, cv::Mat_<float>& mhn);
     void normals_from_gauss(const cv::Mat_<float>& gauss_north, const cv::Mat_<float>& gauss_south, std::vector<std::size_t>& found_normals, std::vector<std::vector<std::size_t>>& found_normals_clusters, const float& threshold);
     void threshold_gauss(const cv::Mat_<float>& src, cv::Mat& dst, const float& threshold);
     void threshold_gauss(const cv::Mat_<float>& src, cv::Mat& dst, const float& threshold, const int& localsize);
