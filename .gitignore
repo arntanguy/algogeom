@@ -22,6 +22,9 @@ tex/*.aux
 tex/*.nav
 tex/*.out
 tex/*.pdf
+tex/*.snm
+tex/*.synctex.gz
+
 
 data/
 build/
