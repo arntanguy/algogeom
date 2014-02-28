@@ -866,25 +866,48 @@ cv::Rect create_rect(int x, int y, int width, int height, int max_x, int max_y)
     return r;
 }
 
-void Scene::normals_from_gauss(const cv::Mat_<float>& gauss_north, const cv::Mat_<float>& gauss_south, std::vector<std::size_t>& found_normals, std::vector<std::vector<std::size_t>>& found_normals_clusters, const float& threshold)
+float compute_mean(const cv::Mat_<float>& gauss_map)
+{
+    float mean = 0;
+    std::for_each(begin(gauss_map), end(gauss_map), [&mean](float v) {
+            mean += v;
+            });
+    return mean / (gauss_map.cols*gauss_map.rows);
+}
+
+float compute_var(const cv::Mat_<float>& gauss_map, const float& mean)
+{
+    float var = 0;
+    std::for_each(begin(gauss_map), end(gauss_map), [&var, &mean](float v) {
+            var += pow(v-mean, 2);
+            });
+    return var / (gauss_map.cols*gauss_map.rows);
+}
+
+void Scene::normals_from_gauss(const cv::Mat_<float>& gauss_map, std::vector<std::size_t>& found_normals, std::vector<std::vector<std::size_t>>& found_normals_clusters)
 {
     found_normals.clear();
     found_normals_clusters.clear();
 
-    cv::Mat_<float> ghn = gauss_north.clone();
-    cv::Mat_<float> ghs = gauss_south.clone();
-    cv::Mat result(cv::Size(gauss_north.rows, gauss_north.cols), CV_32FC3); 
-    gauss_north.convertTo(result, CV_32FC3);
+    cv::Mat_<float> ghn = gauss_map.clone();
+    cv::Mat result(cv::Size(gauss_map.rows, gauss_map.cols), CV_32FC3); 
+    gauss_map.convertTo(result, CV_32FC3);
     cv::cvtColor(result, result, CV_GRAY2RGB);
+    cv::transpose(result, result);
 
+    float mean = compute_mean(gauss_map);
+    float var = compute_var(gauss_map, mean);
+
+    std::vector<float> maxf;
     int found = 0;
+    const int localsize = 10;
     while (found++ < 5) {
         auto max_it = std::max_element(std::begin(ghn), std::end(ghn));
-        auto index = std::distance(begin(ghn), max_it);
+        maxf.push_back(*max_it);
+        size_t index = std::distance(begin(ghn), max_it);
         cv::Point pos(index/ghn.cols, index%ghn.rows);
 
         //XXX compute real bounding box
-        const int localsize = 10;
         cv::Rect bbox = create_rect(pos.x-localsize/2, pos.y-localsize/2, localsize, localsize, ghn.cols, ghn.rows);
 
         found_normals.push_back(index);
@@ -894,8 +917,33 @@ void Scene::normals_from_gauss(const cv::Mat_<float>& gauss_north, const cv::Mat
         fillRect(ghn, bbox);
     }
 
+    std::for_each(begin(maxf), end(maxf), [&mean](float v) {
+            mean += v;
+            });
+    mean /= 100; 
+    std::for_each(begin(maxf), end(maxf), [&var](float v) {
+            var += v;
+            });
+    var /= 100;
+    
+    auto new_end = std::remove_if(begin(maxf), end(maxf), [&mean](const float& val) {
+                return val < mean;
+            });
+    maxf.erase(new_end, end(maxf));
+    auto distance = std::distance(begin(maxf), new_end);
+    cout << "distance: " << distance << endl;
+    found_normals.erase(begin(found_normals)+distance, end(found_normals));
+    found_normals_clusters.erase(begin(found_normals_clusters)+distance, end(found_normals_clusters));
+    cout << "Max size: " << maxf.size() << endl;
+
     cv::namedWindow("result");
     cv::imshow("result", result);
+    cv::imwrite("result.png", result);
+    cv::waitKey();
+
+    cout << "Mean value: " << mean << endl;
+    cout << "Var value: " << var << endl;
+    cout << "Nb Normals: " << found_normals.size() << endl;
 }
 
 //void Scene::normals_from_gauss(const cv::Mat_<float>& gauss_north, const cv::Mat_<float>& gauss_south, std::set<std::size_t>& found_normals, std::vector<std::list<std::size_t>> found_normals_clusters, const float& threshold)

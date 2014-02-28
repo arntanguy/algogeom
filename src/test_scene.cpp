@@ -200,7 +200,7 @@ int main(int argc, char** argv)
 	cv::Mat_<float> mhn(rows,rows);
 	cv::Mat_<float> mhs(rows,rows);
     s.normalize_gauss(hn, hs, mhn, mhs);
-	s.normals_from_gauss(mhn,mhs,vnormal,vidx,0);
+	s.normals_from_gauss(mhn,vnormal,vidx);
 	s.get_distribution_plan(vnormal,vidx,hn2,normal_dist,500,20);
 		
 	
