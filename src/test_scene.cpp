@@ -7,7 +7,13 @@
 #include <opencv2/features2d/features2d.hpp>
 #include <opencv2/nonfree/nonfree.hpp>
 #include <opencv2/ml/ml.hpp>
-
+template<typename Iterator>
+inline void normalize_Linf(Iterator begin, Iterator end)
+{
+	const auto& minmax = std::minmax_element(begin,end);
+	double ratio = 1./std::max(fabs(*minmax.first),fabs(*minmax.second));
+	std::for_each(begin,end,[&ratio](decltype(*begin) val){return val*ratio;});
+}
 void gray_to_color(const cv::Mat_<float>& src, cv::Mat_<cv::Vec<float,3>>& dst)
 {
 	dst.release();
@@ -38,13 +44,37 @@ void gray_to_color(const cv::Mat_<float>& src, cv::Mat_<cv::Vec<float,3>>& dst)
 int main(int argc, char** argv)
 {
 	std::vector<std::string> ply = {
-		"../build/mougin.ply",
-		"../build/appartment.ply",
-		"../build/khan.ply",
-		"../data/Espresso.ply",
-		"../data/saint-jean.ply",
-		"../data/eglise-fontaine.ply",
-		"../data/mvs/P25/cloud.ply"
+		"../build/mougin.ply",//0
+		"../build/appartment.ply",//1
+		"../build/khan.ply",//2
+		"../data/Espresso.ply",//3
+		"../data/saint-jean.ply",//4
+		"../data/eglise-fontaine.ply",//5
+		"../data/mvs/P25/cloud.ply",//6
+		"../fig_geo/cylinder_1_4_1.off",//7
+		"../fig_geo/cylinder_1_1_4.off",
+		"../fig_geo/cylinder_1_4_4.off",
+		"../fig_geo/cone_1_1_4.off",//10
+		"../fig_geo/cone_1_4_1.off",
+		"../fig_geo/cone_1_4_4.off",
+		"../fig_geo/cone_1_1_1_y.off",//13
+		"../fig_geo/cone_1_1_1_z.off",
+		"../fig_geo/cone_1_1_1_zy.off",
+		"../fig_geo/cone_1_1_.1_y.off",//16
+		"../fig_geo/cone_1_1_.1_z.off",
+		"../fig_geo/cone_1_1_.1_zy.off",
+		"../fig_geo/cone_0.off",//19
+		"../fig_geo/cone_1.off",
+		"../fig_geo/cone_2.off",
+		"../fig_geo/cone_3.off",
+		"../fig_geo/cone_4.off",
+		"../fig_geo/cone_5.off",
+		"../fig_geo/cone_6.off",
+		"../fig_geo/cone_7.off",
+		"../fig_geo/cone_8.off",
+		"../fig_geo/cone_9.off",
+		"../fig_geo/cone_10.off",
+		"../fig_geo/cone_11.off"
 	};
 	std::vector<std::string> cam = {
 		"../data/laser/maison_Mougins/Mougins_scan_centers.txt",
@@ -55,10 +85,20 @@ int main(int argc, char** argv)
 		"",
 		""
 	};
-	char idx = (argc==1 ? 0 : argv[1][0] - '0');
+	std::istringstream iss;
+	int idx = (argc==1 ? 0 : atoi(argv[1]));
 	Scene s;
-	s.loadPLY(ply[idx]);
-	s.load_cam(cam[idx]);
+	if(idx>=ply.size())
+	{
+		std::cerr << "bad argument : too high" << std::endl;
+		return EXIT_FAILURE;
+	}
+	if(!s.loadPLY(ply[idx]))
+	{
+		std::cerr << "file not loaded" << std::endl;
+		return EXIT_FAILURE;
+	}
+	s.load_cam(cam.size()>idx?cam[idx]:"");
 	std::cout << "data loaded"<<std::endl;
 	s.compute_Knearest_neighbors(10);
 	std::cout << "nearest neihgbors computed"<<std::endl;
@@ -107,57 +147,35 @@ int main(int argc, char** argv)
 //	normal.insert(normal.end(),{0,-1,0});
 //	normal.insert(normal.end(),{0,0,-1});
 	
-    std::chrono::time_point<std::chrono::system_clock> start, end;
-    start = std::chrono::system_clock::now();
-	
-	s.compute_gauss(hn,hs,normal,rows,rows,beta,alpha);
-
-    end = std::chrono::system_clock::now();
-	std::cout << normal.size() << std::endl;
-
-    std::chrono::duration<double> elapsed_seconds = end - start;
-    std::time_t end_time = std::chrono::system_clock::to_time_t(end);
-
-    std::cout << "\n\nfinished computation at " << std::ctime(&end_time)
-        << "elapsed time: " << elapsed_seconds.count() << "s\n";
 	//	hn.clear();
 	//	hn.resize(pow(rows,2),0);
 	//	hs.clear();
 	//	hs.resize(pow(rows,2),0);
-
-
-    start = std::chrono::system_clock::now();
-	
-	s.compute_gauss2(hn,hs,hn2,hs2,normal,rows,rows,beta,alpha);
-
-    end = std::chrono::system_clock::now();
-	std::cout << normal.size() << std::endl;
-
-    elapsed_seconds = end - start;
-
-    std::cout << "elapsed time: " << elapsed_seconds.count() << "s\n";
-
-	
-
-
+	//s.compute_gauss2(hn,hs,hn2,hs2,normal,rows,rows,beta,alpha);
+	s.compute_gauss3(hn,hn2,normal,rows,rows,beta,alpha);
 
 
 	cv::Mat_<float> mhn(rows,rows);
-	cv::Mat_<float> mhs(rows,rows);
-    s.normalize_gauss(hn, hs, mhn, mhs);
+//	cv::Mat_<float> mhs(rows,rows);
+	
+    s.normalize_gauss(hn, mhn);
+  //  s.normalize_gauss(hs, mhs);
 //    s.normals_from_gauss(mhn, mhs, found_normals, found_normals_clusters, threshold);
 
 	cv::Mat_<cv::Vec3f>	color_mat;
 	gray_to_color(mhn,color_mat);
 	vmhn.push_back(color_mat.clone());
-	gray_to_color(mhs,color_mat);
-	vmhs.push_back(color_mat.clone());
+	color_mat.release();
+	mhn.release();
+	//gray_to_color(mhs,color_mat);
+	//vmhs.push_back(color_mat.clone());
 	}
 	}
 	std::ostringstream oss;
 	std::string str;
 	char c;
-	for(std::size_t i = 0; i<vmhn.size();)
+	//for(std::size_t i = 0; i<vmhn.size();)
+	for(std::size_t i = vmhn.size()-1; i<vmhn.size();)
 	{
 		oss.str("");
 		oss << "hn";
@@ -166,10 +184,10 @@ int main(int argc, char** argv)
 		cv::imshow(str, vmhn[i]);
 		//cv::imshow(str, vmhn[i]*16);
 		oss.str("");
-		oss << "hs";
-		str = oss.str().c_str();
-		cv::namedWindow(str, CV_WINDOW_NORMAL);
-		cv::imshow(str, vmhs[i]);
+	//	oss << "hs";
+	//	str = oss.str().c_str();
+	//	cv::namedWindow(str, CV_WINDOW_NORMAL);
+	//	cv::imshow(str, vmhs[i]);
 //		cv::imshow(str, vmhs[i]*16);
 		c=cv::waitKey();
 		switch(c)

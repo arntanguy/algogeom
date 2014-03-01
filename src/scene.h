@@ -62,6 +62,7 @@ public:
 	}
 
     bool loadPLY(const std::string& path_to_ply);
+    bool load_off(const std::string& path_to_off);
     bool load_cam(const std::string& path_to_cam);
 	void compute_Knearest_neighbors(const std::size_t& K);
 	void compute_normal();

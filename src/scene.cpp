@@ -30,9 +30,33 @@ bool Scene::load_cam(const std::string& path)
 	ifs.close();
 	return true;
 }
+bool Scene::load_off(const std::string& str)
+{
+	std::ifstream ifs;
+	ifs.open(str);
+	if(!ifs)
+		return false;
+	std::string tmp;
+	std::size_t vertex,face,edge;
+	ifs >> tmp;//[...]OFF
+	ifs >> vertex >> face >> edge;
+	double x,y,z;
+	vhpoint.reserve(vertex);
+	vpoint_indice.reserve(vertex);
+	for(std::size_t i=0; i<vertex; ++i)
+	{
+		ifs >> x >> y >> z;
+		const Point_d& p = Point_d(x,y,z);
+		vhpoint.push_back(HPoint(p,0));
+		vpoint_indice.push_back({p,i});
+	}
+	ifs.close();
+	return true;
+}
 bool Scene::loadPLY(const std::string& path)
 {
-
+	if(*path.rbegin()=='f')
+		return load_off(path);
 	vhpoint.clear();
 	vpoint_indice.clear();
 	std::vector< Point_d > points_temp;
@@ -484,7 +508,7 @@ void Scene::compute_gauss3(std::vector<std::size_t>& north_hemisphere,
 		north_hemisphere.resize(pow(rows,2),0);
 
 		std::vector<std::size_t> vcase;
-		vcase.reserve(normal.size()/3);
+		vcase.reserve((normal.size()/3)*2);//*2 because of equator ...
 	double tmp;
 	std::size_t case_tmp;
 	//compute the gauss sphere
@@ -505,6 +529,13 @@ void Scene::compute_gauss3(std::vector<std::size_t>& north_hemisphere,
     	}
 		north_hemisphere[case_tmp]++;
 		vcase.push_back(case_tmp);
+		if(z==0)
+		{
+			tmp = alphabeta/(alpha-z);
+			case_tmp = rows*floor(tmp*-y)+rowrow_s_2+floor(tmp*-x);
+			north_hemisphere[case_tmp]++;
+			vcase.push_back(case_tmp);
+		}
 	}
 	north_hemisphere_idx.clear();
 	//add a ref to the normal
@@ -797,44 +828,18 @@ void Scene::get_distribution_plan(const std::vector<std::size_t>& v_normal_idx, 
    
 void Scene::normalize_gauss(const std::vector<std::size_t> &hn, cv::Mat_<float>& mhn)
 {
-	auto it_vhn = hn.begin();
-	std::size_t max(0);
-	for(auto vend = hn.end();it_vhn!=vend;++it_vhn)
-	{
-		if(*it_vhn>max)
-			max=*it_vhn;
-	}
-	it_vhn = hn.begin();
+	std::size_t max = *std::max_element(hn.begin(),hn.end());
 	double inv_max = 1.0/max;
-	for(auto ithn = mhn.begin(),end=mhn.end();ithn!=end;
-			++ithn,++it_vhn)
-	{
-		*ithn = *it_vhn * inv_max;
-	}
+	std::transform(hn.begin(), hn.end(), mhn.begin(), [&inv_max](decltype(*hn.begin()) val){return val*inv_max;});
 }
 
 
 void Scene::normalize_gauss(const std::vector<std::size_t> &hn, const std::vector<std::size_t>& hs, cv::Mat_<float>& mhn, cv::Mat_<float>& mhs)
 {
-	auto it_vhn = hn.begin();
-	auto it_vhs = hs.begin();
-	std::size_t max(0);
-	for(auto vend = hn.end();it_vhn!=vend;++it_vhn,++it_vhs)
-	{
-		if(*it_vhn>max)
-			max=*it_vhn;
-		if(*it_vhs>max)
-			max=*it_vhs;
-	}
-	it_vhn = hn.begin();
-	it_vhs = hs.begin();
-	double inv_max = 1.0/max;
-	for(auto ithn = mhn.begin(),iths=mhs.begin(),end=mhn.end();ithn!=end;
-			++ithn,++iths,++it_vhn,++it_vhs)
-	{
-		*ithn = *it_vhn * inv_max;
-		*iths = *it_vhs * inv_max;
-	}
+	const double inv_max = 1.0/std::max(*std::max_element(hn.begin(),hn.end()), *std::max_element(hs.begin(), hs.end()));
+	auto func = [&inv_max](decltype(*hn.begin()) val){return val*inv_max;};
+	std::transform(hn.begin(), hn.end(), mhn.begin(), func);
+	std::transform(hs.begin(), hs.end(), mhs.begin(), func);
 }
 
 cv::Rect Scene::compute_bounding_box(const std::vector<cv::Point> &contour)
