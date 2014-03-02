@@ -20,93 +20,27 @@
 /**
  * Use float4 because float3 would be padded to float4 anyway, so avoid confusion
  */
-//void kernel gauss_sphere(volatile global float4* normal, global int* north_hemisphere, global int* south_hemisphere)
-//{
-//    // Crashes if one of the normals is null!
-//    
-//    // XXX
-//    private const float d = 1.;
-//    private const float p = 200.;
-//    private const float h = d+p;
-//    // Half width (of image)
-//    private const float w2 = 1+p/d;
-//    //printf("w2: %f\n", w2);
-//
-//    private int index = get_global_id(0);
-//    private float4 n = normalize(normal[index]);
-//
-//
-//    //printf("n.x %f\n" , n.x);
-//    //printf("n.y %f\n" , n.y);
-//    //printf("n.z %f\n" , n.z);
-//
-//    // C is above for the south hemisphere,
-//    // beneath for the north one
-//    float4 C;
-//    if(n.y < 0)
-//        C = d*normalize((float4)(0., 1., 0., 0.));
-//    else
-//        C = d*((float4)(0., -1., 0., 0.));
-//
-//    //printf("c.x %f\n" , C.x);
-//    //printf("c.y %f\n" , C.y);
-//    //printf("c.z %f\n" , C.z);
-//    // We took the unit sphere, so n is directly the position on the sphere
-//    float4 direction = n-C;
-//    //printf("direction.x %f\n" , direction.x);
-//    //printf("direction.y %f\n" , direction.y);
-//    //printf("direction.z %f\n" , direction.z);
-//
-//    // cos(vertical, direction)
-//    float dot_p = fabs(dot(direction, (float4)(0.f, 1.f, 0.f, 0.f)));
-//    //printf("dot: %f\n", dot_p);
-//
-//    // Trigo to compute length of vector from C to plane
-//    float l = h/dot_p;
-//    //printf("l: %f\n", l);
-//    //printf("n: %f\n", n);
-//    // Project onto plane
-//    float4 point = C + l * direction;
-//    //printf("point.x %f\n" , point.x);
-//    //printf("point.y %f\n" , point.y);
-//    //printf("point.z %f\n" , point.z);
-//
-//    // Convert from plane coordinates to image coordinates
-//    int2 coord = convert_int2((float2)(w2, w2) + point.xz);
-//    //printf("coord.x %i\n" , coord.x);
-//    //printf("coord.y %i\n" , coord.y);
-//    // Convert to accumulator array index
-//    int c = coord.x + 2*w2*coord.y;
-//
-//    //printf("\n\n");
-//    // Accumulate value
-//    if(n.y < 0) {
-//        // Increment value
-//        atomic_inc(&north_hemisphere[c]);
-//    } else {
-//        atomic_inc(&south_hemisphere[c]);
-//    }
-//
-//    //printf("normals %f", normal[index].x);
-//
-//}
-
 void kernel gauss_sphere(volatile global float4* normal, global int* north_hemisphere, global int* south_hemisphere, const float alpha_g, const float beta_g)
 {
     private const float beta = beta_g;
     private const float alpha = alpha_g; 
-    private const int rows = 2*(1+(int)ceil(beta/alpha)) + 1;//(int)(ceil((beta+1.)*2.f+1.f));
+    private const int rows = 2*(1+(int)ceil(beta/alpha)) + 1;
     
     private int index = get_global_id(0);
     private float tmp;
     private int2 coord;
     private float4 n = normal[index];
+    // Compute projection for the south hemisphere
     if(n.z<0) {
         tmp = (beta+alpha)/(alpha-n.z);
         coord = convert_int2((float2)(floor(tmp*n.xy)))+ (int2)(rows/2, rows/2);
         private int tex = coord.y * rows + coord.x;
+        // Atomic operation to increment the value for the current normal.
+        // This ensures that no other normal is currently being accumulated at this position.
         atomic_inc(&south_hemisphere[tex]);
-    } else {
+    } 
+    // North hemisphere
+    else {
         tmp = (beta+alpha)/(alpha+n.z);
         coord = convert_int2((float2)(floor(tmp*n.xy))) + (int2)(rows/2, rows/2);
         private int tex = coord.y * rows + coord.x;
