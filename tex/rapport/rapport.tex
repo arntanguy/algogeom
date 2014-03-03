@@ -176,7 +176,7 @@ Ce type de projection présente de nombreux avantages:
 \item En modifiant les paramètres $\alpha$ et $\beta$ de la projection, on obtient diverses résolution de représentation des normales. On peut alors utiliser ces différents niveaux de résolution afin de rechercher simplement et efficacement de façon hiérarchique les directions principales.
 \end{itemize}
 
-Elle présente cependant un inconvénient majeur: les aires ne sont pas respectées. Il est cependant possible de calculer l'expansion d'aire en fonction de l'angle de projection, et ainsi d'appliquer une distorsion restaurant la notion d'aire.
+Elle présente cependant un avantage majeur: les aires ne sont pas respectées. Il est cependant possible de calculer l'expansion d'aire en fonction de l'angle de projection, et ainsi d'appliquer une distorsion restaurant la notion d'aire.
 
 \subsection{Détection de plans}
 
@@ -212,7 +212,7 @@ Les formes cylindriques accumulent leur normales selon un cercle sur la sphère 
 
 Dans notre espace de représentation projeté, un cylindre résulte en
 \begin{description}
-\item[Un cercle] Si la direction principale est orientée selon $\pm \left(\begin{array}{l}0\\0\\1\end{array}\right)$
+\item[Un cercle] Si la direction principale est orientée selon $\pm \left(\begin{array}{l}0\\1\\0\end{array}\right)$
 \item[Une ellipse] dans tous les autres cas.
 \end{description}
 
@@ -235,16 +235,38 @@ Voici un exemple de résultat obtenu sur un nuage de point de l'Église St. Jean
 \end{figure}
 \end{multicols}
 
-L'arc bleu clair horizontal sur la sphère de gauss représente la direction des normales horizontales de l'église, c'est à dire toute la façade circulaire. Chaque point sur cet arc correspond à une colonne. Les arcs de cercle verticaux représentent la courbure des arches.
+L'arc bleu-vert clair horizontal sur la sphère de gauss représente la direction des normales horizontales de l'église, c'est à dire toute la façade circulaire. Chaque point sur cet arc correspond à une colonne. Les arcs de cercle verticaux représentent la courbure des arches.
 
 Cet espace de représentation est donc loin d'être adapté à la détection des cylindres.
 
 
+\subsection{Détection de cônes}
+
+Les cas étudiés précédemment sont en fait des cas particulier du cône. Un cône est représenté comme un cercle de rayon $r$ sur la sphère de Gauss $r_g$ avec $r <= r_g$.
+On obtient les cas précédents en choisissant des valeurs singulières de la hauteur $h$ du cône.
+
+\begin{description}
+\item[h tends vers 0] Le cône est alors équivalent à un plan, le rayon $r$ sur la sphere de Gauss tends vers 0, on obtient ainsi un point qui est la signature du plan.
+\item[h tends vers l'infini] Le cône est alors équivalent à un cylindre, le rayon $r$ tends vers $r_g$, qui est la signature du cylindre.
+\end{description}
+
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=.5\columnwidth]{cone_1.png}
+\caption{Cône vertical}
+\end{figure}
 
 
 
+\begin{figure}[H]
+\centering
+\includegraphics[width=.5\columnwidth]{cone_6.png}
+\caption{Cône incliné de $\frac{\pi}{4}$}
+\label{fig:cone_anomalie}
+\end{figure}
 
-
+On remarque des anomalies sur la figure \ref{fig:cone_anomalie}. Ceci est du à un effet dû à l'estimation des normales au niveau de la pointe du cône. En effet, l'estimation locale des plus proches voisins n'est plus assimilable à un plan, car la plupart des vertex composant la pointe sont sélectionnées comme étant voisines. Ceci est représentés par les cercles bleus, où la couleur bleue signifie un faible de nombre de normales. Le cercle vert quand à lui représente un grand nombre de normale correspondant aux cotés du cône.
 
 
 \section{Reconstruction de plans}
